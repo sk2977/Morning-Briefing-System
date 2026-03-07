@@ -3,8 +3,8 @@
   "started": "2026-02-17",
   "current_month_theme": "Drug Modalities & Platform Science",
   "current_week": 4,
-  "current_day": 2,
-  "total_lessons_completed": 20,
+  "current_day": 3,
+  "total_lessons_completed": 21,
   "monthly_themes": [
     {
       "month": 1,
@@ -105,7 +105,8 @@
     {"date": "2026-03-03", "topic": "RNA Therapeutics", "subtopic": "GalNAc delivery", "day_type": "CLINICAL_DATA", "key_takeaway": "Real-World Evidence: GalNAc delivery"},
     {"date": "2026-03-04", "topic": "RNA Therapeutics", "subtopic": "durability challenges", "day_type": "COMPETITIVE", "key_takeaway": "Competitive Landscape: durability challenges"},
     {"date": "2026-03-06", "topic": "RNA Therapeutics", "subtopic": "regulatory precedent", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: regulatory precedent"},
-    {"date": "2026-03-07", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "format diversity", "day_type": "MECHANISM", "key_takeaway": "New Concept: format diversity -- 100+ bsAb architectures; IgG-like vs fragment-based vs asymmetric; manufacturing complexity as IP moat"}
+    {"date": "2026-03-07", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "format diversity", "day_type": "MECHANISM", "key_takeaway": "New Concept: format diversity -- 100+ bsAb architectures; IgG-like vs fragment-based vs asymmetric; manufacturing complexity as IP moat"},
+    {"date": "2026-03-07", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "T-cell engagers", "day_type": "CLINICAL_DATA", "key_takeaway": "TCEs achieve 60-80% ORR in RRMM and R/R lymphoma; step-up dosing + outpatient delivery is key commercial unlock; bispecific vs CAR-T competition defining 2026 MM landscape; fixed-duration dosing a differentiator in lymphoma"}
   ],
   "connections_made": [],
   "synthesis_notes": []
