@@ -283,10 +283,10 @@ TODAY'S 10 POINTS
    > Why it matters: [strategic rationale, market signal]
 3. [Therapeutic area signal -- pattern from multiple deals/trials]
 4. [VC pulse -- notable round >$10M from tavily_research]
-5. [Clinical/regulatory catalyst -- from Tavily + Clinical Trials MCP]
-6. [AI technology update -- from Tavily AI searches]
+5. [Clinical/regulatory catalyst -- from WebSearch + Clinical Trials MCP]
+6. [AI technology update -- from WebSearch]
 7. [Newsletter signal -- from Gmail newsletter scan]
-8. [Job market intel -- from Tavily job search]
+8. [Job market intel -- from WebSearch job queries]
 9. [Macro context -- from macro_latest.json]
 10. YOUR MOVE: [Most actionable item today -- specific, concrete next step]
 
@@ -307,7 +307,7 @@ Company News & Strategic Moves (past 48h)
 [From Tavily searches]
 
 Clinical Trial Results & Regulatory (past 48h)
-[From Tavily + Clinical Trials MCP search_trials]
+[From WebSearch + Clinical Trials MCP search_trials]
 
 Therapeutic Area Signals
 [Synthesize patterns from deals + trials + PubMed volumes]
@@ -341,7 +341,7 @@ AI TECHNOLOGY
 ----------------------------------------------------------------
 
 Model Releases & Updates (past 48h)
-[Claude/OpenAI/Gemini from Tavily searches]
+[Claude/OpenAI/Gemini from WebSearch]
 
 AI x Biopharma (past 48h)
 [Intersection news if any]
@@ -374,7 +374,7 @@ JOB MARKET
 ----------------------------------------------------------------
 
 Top Matches (pharma/biotech, Director+ level)
-[3-5 roles from Tavily search]
+[3-5 roles from WebSearch]
 Each: Title | Company | Location | Why it fits
 
 ----------------------------------------------------------------
