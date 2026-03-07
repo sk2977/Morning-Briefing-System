@@ -55,4 +55,5 @@ The scheduled prompt relies on these MCP connections:
 - All file I/O uses `encoding='utf-8'`
 - Context blocks required for every deal/trial/update in the briefing output
 - Only include data from past 48 hours; never backfill with training data
-- `_OLD_OpenClaw_DELETE_AFTER_MIGRATION/` contains the previous system -- delete after parallel validation is complete
+- Tavily is used only for domain-filtered deal searches + VC research (~4-5 calls/run)
+- WebSearch (free) handles PDUFA, AI news, jobs, and macro fallback queries
