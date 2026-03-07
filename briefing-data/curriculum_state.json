@@ -1,0 +1,112 @@
+{
+  "version": "1.0",
+  "started": "2026-02-17",
+  "current_month_theme": "Drug Modalities & Platform Science",
+  "current_week": 4,
+  "current_day": 2,
+  "total_lessons_completed": 20,
+  "monthly_themes": [
+    {
+      "month": 1,
+      "theme": "Drug Modalities & Platform Science",
+      "weeks": [
+        {
+          "week": 1,
+          "topic": "Antibody-Drug Conjugates (ADCs)",
+          "subtopics": ["mechanism", "linker chemistry", "payload selection", "manufacturing moats", "competitive landscape"]
+        },
+        {
+          "week": 2,
+          "topic": "Gene Therapy & Cell Therapy",
+          "subtopics": ["AAV vectors", "CAR-T manufacturing", "CRISPR applications", "durability data", "CDMO capacity"]
+        },
+        {
+          "week": 3,
+          "topic": "RNA Therapeutics",
+          "subtopics": ["siRNA vs ASO vs mRNA", "GalNAc delivery", "durability challenges", "manufacturing scale", "regulatory precedent"]
+        },
+        {
+          "week": 4,
+          "topic": "Bispecific Antibodies & Protein Engineering",
+          "subtopics": ["format diversity", "T-cell engagers", "manufacturing complexity", "immunogenicity", "competitive positioning"]
+        }
+      ]
+    },
+    {
+      "month": 2,
+      "theme": "Deal Structuring & Valuation",
+      "weeks": [
+        {
+          "week": 1,
+          "topic": "Pharma M&A Valuation Frameworks",
+          "subtopics": ["risk-adjusted NPV", "probability of success", "peak sales estimation", "comparable transactions", "premium analysis"]
+        },
+        {
+          "week": 2,
+          "topic": "Deal Structures in Biopharma",
+          "subtopics": ["CVRs", "milestone payments", "royalty structures", "licensing vs acquisition", "earnouts"]
+        },
+        {
+          "week": 3,
+          "topic": "Due Diligence Deep Dive",
+          "subtopics": ["clinical data packages", "IP landscape analysis", "manufacturing diligence", "regulatory pathway risk", "commercial assessment"]
+        },
+        {
+          "week": 4,
+          "topic": "Portfolio Construction & Fund Strategy",
+          "subtopics": ["concentration vs diversification", "stage allocation", "therapeutic area hedging", "exit timing", "vintage year dynamics"]
+        }
+      ]
+    },
+    {
+      "month": 3,
+      "theme": "Regulatory Science & Market Access",
+      "weeks": [
+        {
+          "week": 1,
+          "topic": "FDA Approval Pathways",
+          "subtopics": ["standard vs priority", "breakthrough therapy", "accelerated approval", "RMAT designation", "real-world evidence"]
+        },
+        {
+          "week": 2,
+          "topic": "Clinical Trial Design",
+          "subtopics": ["adaptive designs", "biomarker selection", "endpoint strategy", "comparator choice", "sample size tradeoffs"]
+        },
+        {
+          "week": 3,
+          "topic": "Market Access & Pricing",
+          "subtopics": ["IRA impact", "ICER assessments", "payer dynamics", "launch sequencing", "global pricing strategy"]
+        },
+        {
+          "week": 4,
+          "topic": "Patent Strategy & IP Moats",
+          "subtopics": ["patent cliff analysis", "lifecycle management", "biosimilar entry timing", "freedom to operate", "IP portfolio valuation"]
+        }
+      ]
+    }
+  ],
+  "lessons_completed": [
+    {"date": "2026-02-17", "topic": "Antibody-Drug Conjugates (ADCs)", "subtopic": "linker chemistry", "day_type": "CLINICAL_DATA", "key_takeaway": "Real-World Evidence: linker chemistry"},
+    {"date": "2026-02-18", "topic": "Antibody-Drug Conjugates (ADCs)", "subtopic": "payload selection", "day_type": "COMPETITIVE", "key_takeaway": "Competitive Landscape: payload selection"},
+    {"date": "2026-02-19", "topic": "Antibody-Drug Conjugates (ADCs)", "subtopic": "manufacturing moats", "day_type": "DEAL_ANGLE", "key_takeaway": "Investment & Deal Lens: manufacturing moats"},
+    {"date": "2026-02-20", "topic": "Antibody-Drug Conjugates (ADCs)", "subtopic": "competitive landscape", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: competitive landscape"},
+    {"date": "2026-02-21", "topic": "Gene Therapy & Cell Therapy", "subtopic": "CDMO capacity", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: CDMO capacity"},
+    {"date": "2026-02-22", "topic": "Gene Therapy & Cell Therapy", "subtopic": "CDMO capacity", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: CDMO capacity"},
+    {"date": "2026-02-23", "topic": "Gene Therapy & Cell Therapy", "subtopic": "AAV vectors", "day_type": "MECHANISM", "key_takeaway": "New Concept: AAV vectors"},
+    {"date": "2026-02-24", "topic": "Gene Therapy & Cell Therapy", "subtopic": "CAR-T manufacturing", "day_type": "CLINICAL_DATA", "key_takeaway": "Real-World Evidence: CAR-T manufacturing"},
+    {"date": "2026-02-25", "topic": "Gene Therapy & Cell Therapy", "subtopic": "CRISPR applications", "day_type": "COMPETITIVE", "key_takeaway": "Competitive Landscape: CRISPR applications"},
+    {"date": "2026-02-26", "topic": "Gene Therapy & Cell Therapy", "subtopic": "durability data", "day_type": "DEAL_ANGLE", "key_takeaway": "Investment & Deal Lens: durability data"},
+    {"date": "2026-02-27", "topic": "Gene Therapy & Cell Therapy", "subtopic": "CDMO capacity", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: CDMO capacity"},
+    {"date": "2026-02-28", "topic": "RNA Therapeutics", "subtopic": "regulatory precedent", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: regulatory precedent"},
+    {"date": "2026-03-01", "topic": "RNA Therapeutics", "subtopic": "regulatory precedent", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: regulatory precedent"},
+    {"date": "2026-03-01", "topic": "RNA Therapeutics", "subtopic": "regulatory precedent", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: regulatory precedent"},
+    {"date": "2026-03-02", "topic": "RNA Therapeutics", "subtopic": "siRNA vs ASO vs mRNA", "day_type": "MECHANISM", "key_takeaway": "New Concept: siRNA vs ASO vs mRNA"},
+    {"date": "2026-03-02", "topic": "RNA Therapeutics", "subtopic": "siRNA vs ASO vs mRNA", "day_type": "MECHANISM", "key_takeaway": "New Concept: siRNA vs ASO vs mRNA"},
+    {"date": "2026-03-03", "topic": "RNA Therapeutics", "subtopic": "GalNAc delivery", "day_type": "CLINICAL_DATA", "key_takeaway": "Real-World Evidence: GalNAc delivery"},
+    {"date": "2026-03-04", "topic": "RNA Therapeutics", "subtopic": "durability challenges", "day_type": "COMPETITIVE", "key_takeaway": "Competitive Landscape: durability challenges"},
+    {"date": "2026-03-06", "topic": "RNA Therapeutics", "subtopic": "regulatory precedent", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: regulatory precedent"},
+    {"date": "2026-03-07", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "format diversity", "day_type": "MECHANISM", "key_takeaway": "New Concept: format diversity -- 100+ bsAb architectures; IgG-like vs fragment-based vs asymmetric; manufacturing complexity as IP moat"}
+  ],
+  "connections_made": [],
+  "synthesis_notes": []
+}
