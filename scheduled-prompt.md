@@ -14,7 +14,9 @@ Run this at 6:00 AM ET, weekdays only.
 
 **State folder**: `C:\Users\skimb\GitHub\Morning Briefing System\briefing-data\`
 - `fetch_macro.py` -- Python script for FRED + yfinance data (run this first)
+- `fetch_work_email.py` -- Python script for sakclawbot@gmail.com emails via Gmail API (run in Phase 1)
 - `macro_latest.json` -- written by fetch_macro.py each run
+- `work_emails.json` -- written by fetch_work_email.py each run
 - `curriculum_state.json` -- education progress tracker
 - `deals_log.csv` -- persistent deal database (append new deals each run)
 - `briefing_log.txt` -- rolling 7-day log
@@ -48,8 +50,9 @@ Execute tool calls in parallel where possible. Group by dependency phase:
 
 PHASE 1 -- Run these in parallel (no dependencies between them):
 - Bash: python fetch_macro.py
+- Bash: python fetch_work_email.py
 - gcal_list_events (Calendar)
-- gmail_search_messages x2 accounts (Email)
+- gmail_search_messages for kimber01@gmail.com (Email)
 - WebSearch: PDUFA queries (2)
 - WebSearch: AI Tech queries (3)
 - WebSearch: Job queries (3)
@@ -58,7 +61,8 @@ PHASE 1 -- Run these in parallel (no dependencies between them):
 - search_articles: PubMed queries (5)
 
 PHASE 2 -- After Phase 1 results return:
-- gmail_read_message for top 5 actionable emails
+- gmail_read_message for top 5 actionable kimber01 emails
+- Read work_emails.json (sakclawbot emails already fetched)
 - tavily_extract for top 3-5 deal articles
 - search_trials for any PDUFA/catalyst hits
 - drug_search / get_mechanism for education enrichment
@@ -85,17 +89,17 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Email ==
 
-**Tools**: `gmail_search_messages` (x2 accounts), `gmail_read_message` (for top actionable items)
+**Tools**: `gmail_search_messages` (kimber01 only), `gmail_read_message` (for top actionable items), read `work_emails.json` (sakclawbot)
 **Instructions**:
 1. Search kimber01@gmail.com: `is:unread newer_than:1d` -- get up to 20 results
-2. Search sakclawbot@gmail.com: `is:unread newer_than:1d` -- get up to 20 results
-3. For each email:
+2. Read `C:\Users\skimb\GitHub\Morning Briefing System\briefing-data\work_emails.json` for sakclawbot@gmail.com emails (fetched by `fetch_work_email.py` in Phase 1)
+3. For each email (both sources):
    a. Check sender against SKIP list -- if match, discard
    b. Check sender against PRIORITY list -- if match, flag HIGH
    c. Check subject/snippet against ACTION keywords -- if match, flag MEDIUM (or HIGH if also priority sender)
    d. Otherwise, skip
 4. Sort by urgency: HIGH first, then MEDIUM
-5. For top 5 actionable emails, read full message for context
+5. For top 5 actionable kimber01 emails, use `gmail_read_message` for full context. Work emails from sakclawbot already have body text in the JSON (top 5).
 6. Also scan for newsletter intelligence (pharma/biotech keywords in subjects)
 
 **Output**: EMAIL -- ACTION NEEDED section + newsletter signals for Point 7

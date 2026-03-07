@@ -12,7 +12,11 @@ A Claude Desktop Cowork scheduled task that generates a daily WSJ-style morning 
 scheduled-prompt.md       -- The entire system: modular prompt for Claude Desktop scheduled task
 briefing-data/
   fetch_macro.py          -- FRED API + yfinance -> macro_latest.json (run by Cowork each morning)
+  fetch_work_email.py     -- Gmail API -> work_emails.json for sakclawbot@gmail.com
   macro_latest.json       -- Overwritten each run by fetch_macro.py
+  work_emails.json        -- Overwritten each run by fetch_work_email.py
+  credentials.json        -- Google OAuth credentials (gitignored)
+  token.json              -- Google OAuth token (gitignored, auto-refreshes)
   curriculum_state.json   -- Education progress tracker (updated by scheduled prompt each run)
   deals_log.csv           -- Append-only deal database (29 seeded deals, grows daily)
   briefing_log.txt        -- Rolling 7-day FIFO log
@@ -41,7 +45,8 @@ cd briefing-data && python fetch_macro.py
 ## MCP Dependencies (Claude Desktop)
 
 The scheduled prompt relies on these MCP connections:
-- Gmail (kimber01@gmail.com) -- email triage and newsletter scanning
+- Gmail MCP (kimber01@gmail.com) -- email triage and newsletter scanning
+- Gmail API via fetch_work_email.py (sakclawbot@gmail.com) -- work emails fetched by Python script, written to work_emails.json
 - Google Calendar -- 48h event window
 - WebSearch (built-in, free) -- PDUFA, AI news, jobs, macro fallback
 - Tavily -- domain-filtered deal searches (3 queries) + VC research (1 query) only
