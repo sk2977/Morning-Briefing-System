@@ -3,8 +3,8 @@
   "started": "2026-02-17",
   "current_month_theme": "Drug Modalities & Platform Science",
   "current_week": 4,
-  "current_day": 3,
-  "total_lessons_completed": 21,
+  "current_day": 4,
+  "total_lessons_completed": 18,
   "monthly_themes": [
     {
       "month": 1,
@@ -90,23 +90,19 @@
     {"date": "2026-02-18", "topic": "Antibody-Drug Conjugates (ADCs)", "subtopic": "payload selection", "day_type": "COMPETITIVE", "key_takeaway": "Competitive Landscape: payload selection"},
     {"date": "2026-02-19", "topic": "Antibody-Drug Conjugates (ADCs)", "subtopic": "manufacturing moats", "day_type": "DEAL_ANGLE", "key_takeaway": "Investment & Deal Lens: manufacturing moats"},
     {"date": "2026-02-20", "topic": "Antibody-Drug Conjugates (ADCs)", "subtopic": "competitive landscape", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: competitive landscape"},
-    {"date": "2026-02-21", "topic": "Gene Therapy & Cell Therapy", "subtopic": "CDMO capacity", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: CDMO capacity"},
-    {"date": "2026-02-22", "topic": "Gene Therapy & Cell Therapy", "subtopic": "CDMO capacity", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: CDMO capacity"},
     {"date": "2026-02-23", "topic": "Gene Therapy & Cell Therapy", "subtopic": "AAV vectors", "day_type": "MECHANISM", "key_takeaway": "New Concept: AAV vectors"},
     {"date": "2026-02-24", "topic": "Gene Therapy & Cell Therapy", "subtopic": "CAR-T manufacturing", "day_type": "CLINICAL_DATA", "key_takeaway": "Real-World Evidence: CAR-T manufacturing"},
     {"date": "2026-02-25", "topic": "Gene Therapy & Cell Therapy", "subtopic": "CRISPR applications", "day_type": "COMPETITIVE", "key_takeaway": "Competitive Landscape: CRISPR applications"},
     {"date": "2026-02-26", "topic": "Gene Therapy & Cell Therapy", "subtopic": "durability data", "day_type": "DEAL_ANGLE", "key_takeaway": "Investment & Deal Lens: durability data"},
     {"date": "2026-02-27", "topic": "Gene Therapy & Cell Therapy", "subtopic": "CDMO capacity", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: CDMO capacity"},
-    {"date": "2026-02-28", "topic": "RNA Therapeutics", "subtopic": "regulatory precedent", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: regulatory precedent"},
-    {"date": "2026-03-01", "topic": "RNA Therapeutics", "subtopic": "regulatory precedent", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: regulatory precedent"},
-    {"date": "2026-03-01", "topic": "RNA Therapeutics", "subtopic": "regulatory precedent", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: regulatory precedent"},
-    {"date": "2026-03-02", "topic": "RNA Therapeutics", "subtopic": "siRNA vs ASO vs mRNA", "day_type": "MECHANISM", "key_takeaway": "New Concept: siRNA vs ASO vs mRNA"},
     {"date": "2026-03-02", "topic": "RNA Therapeutics", "subtopic": "siRNA vs ASO vs mRNA", "day_type": "MECHANISM", "key_takeaway": "New Concept: siRNA vs ASO vs mRNA"},
     {"date": "2026-03-03", "topic": "RNA Therapeutics", "subtopic": "GalNAc delivery", "day_type": "CLINICAL_DATA", "key_takeaway": "Real-World Evidence: GalNAc delivery"},
     {"date": "2026-03-04", "topic": "RNA Therapeutics", "subtopic": "durability challenges", "day_type": "COMPETITIVE", "key_takeaway": "Competitive Landscape: durability challenges"},
+    {"date": "2026-03-05", "topic": "RNA Therapeutics", "subtopic": "manufacturing scale", "day_type": "DEAL_ANGLE", "key_takeaway": "Investment & Deal Lens: manufacturing scale"},
     {"date": "2026-03-06", "topic": "RNA Therapeutics", "subtopic": "regulatory precedent", "day_type": "SYNTHESIS", "key_takeaway": "Weekly Synthesis: regulatory precedent"},
     {"date": "2026-03-07", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "format diversity", "day_type": "MECHANISM", "key_takeaway": "New Concept: format diversity -- 100+ bsAb architectures; IgG-like vs fragment-based vs asymmetric; manufacturing complexity as IP moat"},
-    {"date": "2026-03-07", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "T-cell engagers", "day_type": "CLINICAL_DATA", "key_takeaway": "TCEs achieve 60-80% ORR in RRMM and R/R lymphoma; step-up dosing + outpatient delivery is key commercial unlock; bispecific vs CAR-T competition defining 2026 MM landscape; fixed-duration dosing a differentiator in lymphoma"}
+    {"date": "2026-03-07", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "T-cell engagers", "day_type": "CLINICAL_DATA", "key_takeaway": "TCEs achieve 60-80% ORR in RRMM and R/R lymphoma; step-up dosing + outpatient delivery is key commercial unlock; bispecific vs CAR-T competition defining 2026 MM landscape; fixed-duration dosing a differentiator in lymphoma"},
+    {"date": "2026-03-08", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "manufacturing complexity", "day_type": "COMPETITIVE", "key_takeaway": "Chain-pairing problem creates 10 possible combinations from 2H+2L chains; platform solutions (knobs-into-holes, DuoBody, BiTE, CrossMAb) each carry distinct manufacturing tradeoffs; validated manufacturing platform IS the moat -- J&J DuoBody and Amgen BiTE command premium valuations; platform companies amortize process dev costs across portfolio"}
   ],
   "connections_made": [],
   "synthesis_notes": []

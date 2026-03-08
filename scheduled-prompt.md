@@ -1,6 +1,6 @@
 # Morning Briefing -- Scheduled Prompt for Claude Desktop
 
-Run this at 6:00 AM ET, weekdays only.
+Run this at 6:00 AM ET daily. On weekends, use wider search windows (past 72h for deals and macro) and skip the Jobs module.
 
 ---
 
@@ -53,11 +53,12 @@ PHASE 1 -- Run these in parallel (no dependencies between them):
 - Bash: python fetch_work_email.py
 - gcal_list_events (Calendar)
 - gmail_search_messages for kimber01@gmail.com (Email)
-- WebSearch: PDUFA queries (2)
+- WebSearch: PDUFA + clinical readout queries (4)
 - WebSearch: AI Tech queries (3)
-- WebSearch: Job queries (3)
-- tavily_search: Deal queries (3, with domain filters)
-- tavily_research: VC query (1)
+- WebSearch: Macro event queries (3)
+- WebSearch: Job queries (3, skip on weekends)
+- tavily_search: Deal queries (3, with domain filters, days: 3)
+- tavily_research: VC query (1, time_range: week)
 - search_articles: PubMed queries (5)
 
 PHASE 2 -- After Phase 1 results return:
@@ -108,9 +109,9 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Deals ==
 
-**Tools**: `tavily_search` (3 queries, `days: 1`, `topic: "news"`), `tavily_extract` (for top articles)
+**Tools**: `tavily_search` (3 queries, `days: 3`, `topic: "news"`), `tavily_extract` (for top articles)
 **Instructions**:
-1. Run these 3 searches (days: 1, topic: "news", include_domains: fiercebiotech.com, endpts.com, statnews.com, biopharmadive.com, reuters.com, bloomberg.com):
+1. Run these 3 searches (days: 3, topic: "news", include_domains: fiercebiotech.com, endpts.com, statnews.com, biopharmadive.com, reuters.com, bloomberg.com):
    - "biopharma acquisition M&A merger deal 2026"
    - "pharma biotech licensing agreement partnership collaboration 2026"
    - "drug deal milestone upfront payment announced 2026"
@@ -137,7 +138,11 @@ PHASE 3 -- After Phase 2:
 2. Read `C:\Users\skimb\GitHub\Morning Briefing System\briefing-data\macro_latest.json`
 3. Extract all FRED data (fed_funds_rate, ten_year_yield, unemployment_rate, cpi_index, oil_wti) and market data (sp500, xbi, russell2000)
 4. If any values are null (API failure), use `WebSearch` to fill gaps: "Federal Reserve rate 10 year treasury yield current today [date]"
-5. Search for upcoming key dates: `WebSearch` "FOMC meeting date 2026 past 24 hours" and "PDUFA dates upcoming 2026 past 24 hours"
+5. Search for market-moving economic events (run all 3 in parallel):
+   - WebSearch: "nonfarm payrolls jobs report economic data [current month] 2026"
+   - WebSearch: "FOMC meeting CPI PCE inflation data release 2026"
+   - WebSearch: "stock market today S&P 500 biotech [current month] 2026"
+6. If a major data release occurred in the past 72h (NFP, CPI, PCE, GDP), lead the MACRO section and Point 1 with the surprise/miss and market reaction. FRED data is lagging -- WebSearch is the primary source for recent macro events.
 
 **Output**: MACRO ENVIRONMENT section
 
@@ -147,7 +152,7 @@ PHASE 3 -- After Phase 2:
 
 **Tool**: `tavily_research` (1 query)
 **Instructions**:
-1. Research query: "biotech venture capital Series A B C funding round 2026 this week" -- only include results from the past 24 hours
+1. Research query: "biotech venture capital Series A B C funding round 2026 this week" -- use time_range: "week" (past 7 days)
 2. Filter for rounds >$10M
 3. Note company, amount, lead investor, therapeutic focus, stage
 
@@ -159,10 +164,12 @@ PHASE 3 -- After Phase 2:
 
 **Tools**: `WebSearch`, `search_trials` (Clinical Trials MCP)
 **Instructions**:
-1. WebSearch: "PDUFA date FDA approval decision 2026 March past 24 hours"
-2. WebSearch: "biotech earnings report results Q1 2026 today"
-3. For any PDUFA dates found, use `search_trials` to get trial details (phase, endpoints, enrollment)
-4. For clinical readouts, use `search_trials` to verify trial status
+1. WebSearch: "PDUFA date FDA approval decision 2026 [current month]"
+2. WebSearch: "biotech clinical trial results phase 2 phase 3 data readout 2026 this week"
+3. WebSearch: "drug approval regulatory decision EMA NMPA 2026 this week"
+4. WebSearch: "biotech earnings report results Q1 2026 today"
+5. For any hits, use `search_trials` to get trial details (phase, endpoints, enrollment)
+6. Flag any results with >10% stock move or clinically significant endpoints (e.g., p<0.001, OS/PFS improvement >3mo, response rate >50%)
 
 **Output**: Clinical Trial Results & Regulatory subsection + WHAT TO WATCH entries
 
@@ -204,9 +211,10 @@ PHASE 3 -- After Phase 2:
 **Instructions**:
 1. Read `C:\Users\skimb\GitHub\Morning Briefing System\briefing-data\curriculum_state.json`
 2. Determine today's lesson:
-   - Day-of-week rotation: Mon=MECHANISM, Tue=CLINICAL_DATA, Wed=COMPETITIVE, Thu=DEAL_ANGLE, Fri=SYNTHESIS
+   - Day-of-week rotation: Mon=MECHANISM, Tue=CLINICAL_DATA, Wed=COMPETITIVE, Thu=DEAL_ANGLE, Fri=SYNTHESIS, Weekend=SYNTHESIS
    - Current week/topic from state file
    - Pick next uncovered subtopic for the current week
+   - NEWS OVERRIDE: If the day's top deal or clinical readout directly involves a different modality/mechanism, teach THAT mechanism instead using the same day-type lens. Example: if today is COMPETITIVE day on "Bispecifics" but the top deal is a CAR-T acquisition, teach competitive positioning of CAR-T vs bispecifics. Log the override topic in curriculum_state.json as a bonus lesson (do not advance the week counter).
 3. Write 400-600 word lesson covering:
    - Core mechanism or concept
    - Real clinical data or case study (use ChEMBL `drug_search` or `get_mechanism` to enrich with real drug data)

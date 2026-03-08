@@ -60,5 +60,5 @@ The scheduled prompt relies on these MCP connections:
 - All file I/O uses `encoding='utf-8'`
 - Context blocks required for every deal/trial/update in the briefing output
 - Only include data from past 48 hours; never backfill with training data
-- Tavily is used only for domain-filtered deal searches + VC research (~4-5 calls/run)
-- WebSearch (free) handles PDUFA, AI news, jobs, and macro fallback queries
+- Tavily is used only for domain-filtered deal searches (days: 3) + VC research (time_range: week) (~4-5 calls/run)
+- WebSearch (free) handles PDUFA, clinical readouts, AI news, jobs, macro events, and macro fallback queries (~16-19 calls/run)
