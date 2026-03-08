@@ -1,0 +1,5 @@
+requests>=2.32
+yfinance>=0.2.57
+python-dotenv>=1.1
+google-api-python-client>=2.192
+google-auth-oauthlib>=1.3

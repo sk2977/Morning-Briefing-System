@@ -13,9 +13,13 @@ from pathlib import Path
 
 import requests
 import yfinance as yf
+from dotenv import load_dotenv
 
 OUTPUT_DIR = Path(__file__).parent
 OUTPUT_FILE = OUTPUT_DIR / "macro_latest.json"
+
+# Load .env from the same directory as this script
+load_dotenv(OUTPUT_DIR / ".env")
 
 # FRED API key (free tier: https://fred.stlouisfed.org/docs/api/api_key.html)
 FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
