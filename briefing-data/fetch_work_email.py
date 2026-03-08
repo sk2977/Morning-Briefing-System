@@ -35,8 +35,12 @@ def get_gmail_service():
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             print("[INFO] Refreshing expired token...")
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception as e:
+                print(f"[WARNING] Token refresh failed ({e}), re-authenticating...")
+                creds = None
+        if not creds or not creds.valid:
             if not CREDENTIALS_FILE.exists():
                 print(f"[ERROR] {CREDENTIALS_FILE} not found.", file=sys.stderr)
                 sys.exit(1)
@@ -89,6 +93,17 @@ def fetch_emails(service, max_results=20):
     return emails
 
 
+def _extract_plain_text(payload):
+    """Recursively walk MIME parts to find text/plain body."""
+    if payload.get("mimeType") == "text/plain" and payload.get("body", {}).get("data"):
+        return base64.urlsafe_b64decode(payload["body"]["data"]).decode("utf-8", errors="replace")
+    for part in payload.get("parts", []):
+        text = _extract_plain_text(part)
+        if text:
+            return text
+    return ""
+
+
 def fetch_full_message(service, msg_id):
     """Fetch full message body for a specific email."""
     msg = service.users().messages().get(
@@ -97,17 +112,7 @@ def fetch_full_message(service, msg_id):
         format="full",
     ).execute()
 
-    body = ""
-    payload = msg.get("payload", {})
-
-    # Try plain text first
-    if payload.get("mimeType") == "text/plain" and payload.get("body", {}).get("data"):
-        body = base64.urlsafe_b64decode(payload["body"]["data"]).decode("utf-8", errors="replace")
-    elif payload.get("parts"):
-        for part in payload["parts"]:
-            if part.get("mimeType") == "text/plain" and part.get("body", {}).get("data"):
-                body = base64.urlsafe_b64decode(part["body"]["data"]).decode("utf-8", errors="replace")
-                break
+    body = _extract_plain_text(msg.get("payload", {}))
 
     # Truncate long bodies
     if len(body) > 2000:

@@ -18,15 +18,16 @@ OUTPUT_DIR = Path(__file__).parent
 OUTPUT_FILE = OUTPUT_DIR / "macro_latest.json"
 
 # FRED API key (free tier: https://fred.stlouisfed.org/docs/api/api_key.html)
-FRED_API_KEY = os.environ.get("FRED_API_KEY", "f5a38078c455c326a0c71b7c180d2313")
+FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
 FRED_BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 
+# (series_id, frequency) -- "monthly" series use observation[11] for YoY; "daily" skip YoY
 FRED_SERIES = {
-    "fed_funds_rate": "FEDFUNDS",
-    "ten_year_yield": "GS10",
-    "unemployment_rate": "UNRATE",
-    "cpi_index": "CPIAUCSL",
-    "oil_wti": "DCOILWTICO",
+    "fed_funds_rate": ("FEDFUNDS", "monthly"),
+    "ten_year_yield": ("GS10", "monthly"),
+    "unemployment_rate": ("UNRATE", "monthly"),
+    "cpi_index": ("CPIAUCSL", "monthly"),
+    "oil_wti": ("DCOILWTICO", "daily"),
 }
 
 MARKET_TICKERS = {
@@ -36,10 +37,11 @@ MARKET_TICKERS = {
 }
 
 
-def fetch_fred_series(series_id: str) -> dict:
+FRED_NULL_RESULT = {"value": None, "date": None, "yoy_change": None}
+
+
+def fetch_fred_series(series_id: str, frequency: str = "monthly") -> dict:
     """Fetch latest value from FRED API."""
-    if not FRED_API_KEY:
-        return {"value": None, "date": None, "yoy_change": None, "error": "no API key"}
     params = {
         "series_id": series_id,
         "api_key": FRED_API_KEY,
@@ -53,16 +55,17 @@ def fetch_fred_series(series_id: str) -> dict:
         observations = resp.json().get("observations", [])
         valid = [o for o in observations if o["value"] != "."]
         if not valid:
-            return {"value": None, "date": None, "yoy_change": None}
+            return dict(FRED_NULL_RESULT)
 
         latest = valid[0]
         value = float(latest["value"])
         date = latest["date"]
 
+        # YoY only meaningful for monthly series (12 observations ~ 1 year)
         yoy_change = None
-        if len(valid) >= 12:
-            year_ago = float(valid[11]["value"]) if valid[11]["value"] != "." else None
-            if year_ago and year_ago != 0:
+        if frequency == "monthly" and len(valid) >= 12:
+            year_ago = float(valid[11]["value"])
+            if year_ago != 0:
                 if series_id == "CPIAUCSL":
                     yoy_change = round(((value - year_ago) / year_ago) * 100, 2)
                 else:
@@ -71,7 +74,10 @@ def fetch_fred_series(series_id: str) -> dict:
         return {"value": round(value, 2), "date": date, "yoy_change": yoy_change}
     except Exception as e:
         print(f"[ERROR] FRED {series_id}: {e}", file=sys.stderr)
-        return {"value": None, "date": None, "yoy_change": None}
+        return dict(FRED_NULL_RESULT)
+
+
+MARKET_NULL_RESULT = {"price": None, "daily_change_pct": None, "ytd_change_pct": None}
 
 
 def fetch_market_data() -> dict:
@@ -90,12 +96,12 @@ def fetch_market_data() -> dict:
                     hist = ytd_data[ticker] if ticker in ytd_data.columns.get_level_values(0) else None
 
                 if hist is None or hist.empty or len(hist) < 2:
-                    results[name] = {"price": None, "daily_change_pct": None, "ytd_change_pct": None}
+                    results[name] = dict(MARKET_NULL_RESULT)
                     continue
 
                 hist = hist.dropna(subset=["Close"])
                 if len(hist) < 2:
-                    results[name] = {"price": None, "daily_change_pct": None, "ytd_change_pct": None}
+                    results[name] = dict(MARKET_NULL_RESULT)
                     continue
 
                 latest_close = float(hist["Close"].iloc[-1])
@@ -112,12 +118,12 @@ def fetch_market_data() -> dict:
                 }
             except Exception as e:
                 print(f"[ERROR] yfinance {ticker}: {e}", file=sys.stderr)
-                results[name] = {"price": None, "daily_change_pct": None, "ytd_change_pct": None}
+                results[name] = dict(MARKET_NULL_RESULT)
 
     except Exception as e:
         print(f"[ERROR] yfinance batch download: {e}", file=sys.stderr)
         for name in MARKET_TICKERS:
-            results[name] = {"price": None, "daily_change_pct": None, "ytd_change_pct": None}
+            results[name] = dict(MARKET_NULL_RESULT)
 
     return results
 
@@ -129,10 +135,10 @@ def main():
     if not FRED_API_KEY:
         print("[WARNING] FRED_API_KEY not set. Skipping FRED data.")
         for name in FRED_SERIES:
-            fred_results[name] = {"value": None, "date": None, "yoy_change": None, "error": "no API key"}
+            fred_results[name] = dict(FRED_NULL_RESULT)
     else:
-        for name, series_id in FRED_SERIES.items():
-            fred_results[name] = fetch_fred_series(series_id)
+        for name, (series_id, frequency) in FRED_SERIES.items():
+            fred_results[name] = fetch_fred_series(series_id, frequency)
             val = fred_results[name]["value"]
             if val is not None:
                 print(f"  [OK] {name}: {val}")
@@ -154,7 +160,7 @@ def main():
     }
 
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
-        json.dump(output, f, indent=2)
+        json.dump(output, f, indent=2, ensure_ascii=False)
 
     print(f"[OK] Wrote {OUTPUT_FILE}")
     return output
