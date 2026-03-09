@@ -258,6 +258,7 @@ Combine all module outputs into the final briefing format below. Apply these rul
 - YOUR MOVE (#10) must be concrete and actionable.
 - Omit sections with no fresh data.
 - After producing the briefing, create a Gmail draft (`gmail_create_draft`) to kimber01@gmail.com with the briefing as the body.
+- Save the full briefing text to `briefing-data/briefing_output_YYYYMMDD.txt` (e.g., `briefing_output_20260309.txt`).
 - Update `briefing_log.txt`: append today's entry, remove entries older than 7 days.
 
 **Final output format**:
