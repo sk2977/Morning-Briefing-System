@@ -3,8 +3,8 @@
   "started": "2026-02-17",
   "current_month_theme": "Drug Modalities & Platform Science",
   "current_week": 4,
-  "current_day": 4,
-  "total_lessons_completed": 18,
+  "current_day": 5,
+  "total_lessons_completed": 19,
   "monthly_themes": [
     {
       "month": 1,
@@ -103,7 +103,8 @@
     {"date": "2026-03-07", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "format diversity", "day_type": "MECHANISM", "key_takeaway": "New Concept: format diversity -- 100+ bsAb architectures; IgG-like vs fragment-based vs asymmetric; manufacturing complexity as IP moat"},
     {"date": "2026-03-07", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "T-cell engagers", "day_type": "CLINICAL_DATA", "key_takeaway": "TCEs achieve 60-80% ORR in RRMM and R/R lymphoma; step-up dosing + outpatient delivery is key commercial unlock; bispecific vs CAR-T competition defining 2026 MM landscape; fixed-duration dosing a differentiator in lymphoma"},
     {"date": "2026-03-08", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "manufacturing complexity", "day_type": "COMPETITIVE", "key_takeaway": "Chain-pairing problem creates 10 possible combinations from 2H+2L chains; platform solutions (knobs-into-holes, DuoBody, BiTE, CrossMAb) each carry distinct manufacturing tradeoffs; validated manufacturing platform IS the moat -- J&J DuoBody and Amgen BiTE command premium valuations; platform companies amortize process dev costs across portfolio"},
-    {"date": "2026-03-09", "topic": "NEWS OVERRIDE: JAK/ROCK Dual Inhibition (Sanofi/Sino Biopharm deal)", "subtopic": "JAK1/2-ROCK1/2 mechanism", "day_type": "MECHANISM", "key_takeaway": "Single-molecule multi-pathway inhibition (JAK+ROCK) is a growing drug design trend; JAK arm suppresses inflammatory cytokines via STAT3/5, ROCK arm modulates T-cell balance and fibrosis; rovadicitinib differentiated from ruxolitinib by addressing fibrotic component; first major Chinese pharma out-license to Big Pharma at $1.53B signals maturing Chinese innovation; watch Karyopharm SENTRY data this month for competitive read", "bonus_lesson": true}
+    {"date": "2026-03-09", "topic": "NEWS OVERRIDE: JAK/ROCK Dual Inhibition (Sanofi/Sino Biopharm deal)", "subtopic": "JAK1/2-ROCK1/2 mechanism", "day_type": "MECHANISM", "key_takeaway": "Single-molecule multi-pathway inhibition (JAK+ROCK) is a growing drug design trend; JAK arm suppresses inflammatory cytokines via STAT3/5, ROCK arm modulates T-cell balance and fibrosis; rovadicitinib differentiated from ruxolitinib by addressing fibrotic component; first major Chinese pharma out-license to Big Pharma at $1.53B signals maturing Chinese innovation; watch Karyopharm SENTRY data this month for competitive read", "bonus_lesson": true},
+    {"date": "2026-03-10", "topic": "Bispecific Antibodies & Protein Engineering", "subtopic": "immunogenicity", "day_type": "CLINICAL_DATA", "key_takeaway": "ADA incidence and neutralizing ADA rates are leading indicators of bispecific durability; Vertex povetacicept RAINER Ph3 showed clean immunogenicity with ~50% uPCR and ~79% Gd-IgA1 reduction in IgAN; receptor-based fusion proteins (TACI-Fc) may carry inherent immunogenicity advantages over engineered bispecific formats; clean ADA profile at Phase 3 strongly predicts franchise-level outcomes"}
   ],
   "connections_made": [],
   "synthesis_notes": []
