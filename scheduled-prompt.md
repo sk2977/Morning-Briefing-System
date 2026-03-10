@@ -71,8 +71,10 @@ PHASE 2 -- After Phase 1 results return:
 
 PHASE 3 -- After Phase 2:
 - SYNTHESIZE into final briefing
+- Save briefing text to briefing-data/briefing_output_YYYYMMDD.txt
+- Bash: python generate_pdf.py YYYYMMDD (generates briefing_YYYYMMDD.pdf)
 - Write updates: deals_log.csv, curriculum_state.json, briefing_log.txt
-- gmail_create_draft with briefing
+- gmail_create_draft with briefing (note: PDF saved at briefing-data/briefing_YYYYMMDD.pdf)
 
 ---
 
@@ -257,8 +259,9 @@ Combine all module outputs into the final briefing format below. Apply these rul
 - Context blocks for EVERY deal/trial/update -- no exceptions.
 - YOUR MOVE (#10) must be concrete and actionable.
 - Omit sections with no fresh data.
-- After producing the briefing, create a Gmail draft (`gmail_create_draft`) to kimber01@gmail.com with the briefing as the body.
-- Save the full briefing text to `briefing-data/briefing_output_YYYYMMDD.txt` (e.g., `briefing_output_20260309.txt`).
+- After producing the briefing, save the full briefing text to `briefing-data/briefing_output_YYYYMMDD.txt` (e.g., `briefing_output_20260309.txt`).
+- Run `python generate_pdf.py YYYYMMDD` to generate `briefing_YYYYMMDD.pdf` in the same folder.
+- Create a Gmail draft (`gmail_create_draft`) to kimber01@gmail.com with the briefing as the body. Note: PDF is saved at `briefing-data/briefing_YYYYMMDD.pdf` for manual attachment until Gmail API attachment support is added.
 - Update `briefing_log.txt`: append today's entry, remove entries older than 7 days.
 
 **Final output format**:

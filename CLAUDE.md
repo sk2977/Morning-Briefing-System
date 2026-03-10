@@ -13,6 +13,7 @@ scheduled-prompt.md       -- The entire system: modular prompt for Claude Deskto
 briefing-data/
   fetch_macro.py          -- FRED API + yfinance -> macro_latest.json (run by Cowork each morning)
   fetch_work_email.py     -- Gmail API -> work_emails.json for sakclawbot@gmail.com
+  generate_pdf.py         -- ReportLab -> briefing_YYYYMMDD.pdf (WSJ-style PDF from briefing text)
   macro_latest.json       -- Overwritten each run by fetch_macro.py
   work_emails.json        -- Overwritten each run by fetch_work_email.py
   credentials.json        -- Google OAuth credentials (gitignored)
@@ -30,6 +31,9 @@ The scheduled prompt is built as independent module blocks (`== MODULE: Name ==`
 ```bash
 # Test the macro data fetcher (FRED + yfinance)
 cd briefing-data && python fetch_macro.py
+
+# Generate PDF from briefing text
+cd briefing-data && python generate_pdf.py YYYYMMDD
 
 # FRED API key is hardcoded in fetch_macro.py (free tier)
 # Can also be set via: export FRED_API_KEY=your_key
