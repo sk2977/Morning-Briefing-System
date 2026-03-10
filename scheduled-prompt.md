@@ -21,6 +21,8 @@ Run this at 6:00 AM ET daily. On weekends, use wider search windows (past 72h fo
 - `deals_log.csv` -- persistent deal database (append new deals each run)
 - `briefing_log.txt` -- rolling 7-day log
 
+**Output**: Obsidian vault note at `C:\Users\skimb\OneDrive\Obsidian Notes\Obsidian Vault\Briefings\YYYY-MM-DD Morning Briefing.md`
+
 **Permissions note**: The first time you run this task, click "Run now" and select "Always allow" for every permission prompt (WebSearch, Gmail, Calendar, Tavily, Bash, file read/write). Future runs will auto-approve. To review or revoke, open the task's "Always allowed" panel.
 
 **Format rules**:
@@ -71,10 +73,8 @@ PHASE 2 -- After Phase 1 results return:
 
 PHASE 3 -- After Phase 2:
 - SYNTHESIZE into final briefing
-- Save briefing text to briefing-data/briefing_output_YYYYMMDD.txt
-- Bash: python generate_pdf.py YYYYMMDD (generates briefing_YYYYMMDD.pdf)
+- Write briefing as Obsidian note to `C:\Users\skimb\OneDrive\Obsidian Notes\Obsidian Vault\Briefings\YYYY-MM-DD Morning Briefing.md` (create Briefings/ folder if it does not exist)
 - Write updates: deals_log.csv, curriculum_state.json, briefing_log.txt
-- gmail_create_draft with briefing (note: PDF saved at briefing-data/briefing_YYYYMMDD.pdf)
 
 ---
 
@@ -259,33 +259,33 @@ Combine all module outputs into the final briefing format below. Apply these rul
 - Context blocks for EVERY deal/trial/update -- no exceptions.
 - YOUR MOVE (#10) must be concrete and actionable.
 - Omit sections with no fresh data.
-- After producing the briefing, save the full briefing text to `briefing-data/briefing_output_YYYYMMDD.txt` (e.g., `briefing_output_20260309.txt`).
-- Run `python generate_pdf.py YYYYMMDD` to generate `briefing_YYYYMMDD.pdf` in the same folder.
-- Create a Gmail draft (`gmail_create_draft`) to kimber01@gmail.com with the briefing as the body. Note: PDF is saved at `briefing-data/briefing_YYYYMMDD.pdf` for manual attachment until Gmail API attachment support is added.
+- After producing the briefing, write it as an Obsidian note to `C:\Users\skimb\OneDrive\Obsidian Notes\Obsidian Vault\Briefings\YYYY-MM-DD Morning Briefing.md` (e.g., `2026-03-09 Morning Briefing.md`). Create the `Briefings/` folder if it does not exist.
 - Update `briefing_log.txt`: append today's entry, remove entries older than 7 days.
 
-**Final output format**:
+**Final output format** (write as Obsidian markdown note):
 
-```
-================================================================
-MORNING BRIEFING -- [Today's Date]
-~10 min read | 6:00 AM ET
-================================================================
+```markdown
+---
+tags: [briefing, daily]
+date: YYYY-MM-DD
+---
 
-CRITICAL EVENTS (next 48h)
---------------------------
-[From Google Calendar: interviews, deadlines, important meetings]
-[If none: omit this section entirely]
+# Morning Briefing -- [Today's Date, e.g. March 9, 2026]
+*~10 min read | 6:00 AM ET*
 
-EMAIL -- ACTION NEEDED
-----------------------
+---
+
+> [!warning] Critical Events (next 48h)
+> [From Google Calendar: interviews, deadlines, important meetings]
+> [If none: omit this callout entirely]
+
+## Email -- Action Needed
 [Top 5 actionable emails, sorted by urgency]
 [Each entry: sender | subject | action needed | urgency (HIGH/MEDIUM/LOW)]
 [Skip: noreply, newsletters, marketing, LinkedIn notifications]
 [Priority senders flagged: shannon, corey, jenna, simon, philip, ali, herman, peter, yasmin]
 
-TODAY'S 10 POINTS
------------------
+## Today's 10 Points
 1. [Market/XBI sentiment -- from macro_latest.json]
 2. [Top biopharma deal -- from Tavily deal search]
    > Modality: [type, mechanism, advantages/limitations]
@@ -300,73 +300,78 @@ TODAY'S 10 POINTS
 7. [Newsletter signal -- from Gmail newsletter scan]
 8. [Job market intel -- from WebSearch job queries]
 9. [Macro context -- from macro_latest.json]
-10. YOUR MOVE: [Most actionable item today -- specific, concrete next step]
+10. > [!tip] Your Move
+    > [Most actionable item today -- specific, concrete next step]
 
-----------------------------------------------------------------
-BIOPHARMA
-----------------------------------------------------------------
+---
 
-M&A / Deal Flow (past 7 days)
+## Biopharma
+
+### M&A / Deal Flow (past 7 days)
 [Deals from Tavily search, each with full context block]
 [Context block format for EVERY deal:]
-  > Modality: [type -- explain mechanistically, key advantages/limitations]
-  > Disease: [what it is, global patient population, burden]
-  > Unmet need: [what current treatments miss, why this matters]
-  > Competition: [key players, approved drugs, late-stage pipeline threats]
-  > Why it matters: [strategic rationale, what this signals for the market]
+> Modality: [type -- explain mechanistically, key advantages/limitations]
+> Disease: [what it is, global patient population, burden]
+> Unmet need: [what current treatments miss, why this matters]
+> Competition: [key players, approved drugs, late-stage pipeline threats]
+> Why it matters: [strategic rationale, what this signals for the market]
 
-Company News & Strategic Moves (past 48h)
+### Company News & Strategic Moves (past 48h)
 [From Tavily searches]
 
-Clinical Trial Results & Regulatory (past 48h)
+### Clinical Trial Results & Regulatory (past 48h)
 [From WebSearch + Clinical Trials MCP search_trials]
 
-Therapeutic Area Signals
+### Therapeutic Area Signals
 [Synthesize patterns from deals + trials + PubMed volumes]
 
-VC / Private Markets (past 48h)
+### VC / Private Markets (past 48h)
 [Rounds >$10M from tavily_research]
 
-----------------------------------------------------------------
-MACRO ENVIRONMENT
-----------------------------------------------------------------
+---
 
-Rates & Fixed Income
-  Fed Funds Rate: [x.xx%] (from macro_latest.json)
-  10-Year Treasury: [x.xx%]
-  Oil (WTI): $[xx.xx]
+## Macro Environment
 
-Labor & Inflation
-  Unemployment: [x.x%] (report date: [date])
-  CPI: [x.x%] YoY
+**Rates & Fixed Income**
+| Metric | Value |
+|--------|-------|
+| Fed Funds Rate | [x.xx%] |
+| 10-Year Treasury | [x.xx%] |
+| Oil (WTI) | $[xx.xx] |
 
-Market Context for Biotech
-  S&P 500: [x,xxx] ([+/-x.x%] YTD)
-  XBI: [$xxx] ([+/-x.x%] YTD, [+/-x.x%] today)
-  Russell 2000: [x,xxx] ([+/-x.x%] YTD)
+**Labor & Inflation**
+| Metric | Value | As Of |
+|--------|-------|-------|
+| Unemployment | [x.x%] | [date] |
+| CPI | [x.x%] YoY | [date] |
 
-Key Dates
+**Market Context for Biotech**
+| Index | Level | YTD |
+|-------|-------|-----|
+| S&P 500 | [x,xxx] | [+/-x.x%] |
+| XBI | [$xxx] | [+/-x.x%] |
+| Russell 2000 | [x,xxx] | [+/-x.x%] |
+
+### Key Dates
 [Only confirmed upcoming: FOMC, unemployment report, PCE, PDUFA dates]
 
-----------------------------------------------------------------
-AI TECHNOLOGY
-----------------------------------------------------------------
+---
 
-Model Releases & Updates (past 48h)
+## AI Technology
+
+### Model Releases & Updates (past 48h)
 [Claude/OpenAI/Gemini from WebSearch]
 
-AI x Biopharma (past 48h)
+### AI x Biopharma (past 48h)
 [Intersection news if any]
 
-Strategic Signal
-[One sentence grounded in specific past-48h development]
+**Strategic Signal**: [One sentence grounded in specific past-48h development]
 
-----------------------------------------------------------------
-COMPOUNDING EDUCATION
-----------------------------------------------------------------
+---
 
-Week [N]: [Topic Name]
-[Day type]: [Subtopic]
+## Compounding Education
+
+**Week [N]: [Topic Name]** | [Day type]: [Subtopic]
 
 [400-600 word lesson covering:]
 - Core mechanism / concept
@@ -377,22 +382,21 @@ Week [N]: [Topic Name]
 
 [Enriched with ChEMBL drug data and/or PubMed articles where relevant]
 
-Connections to prior lessons:
+**Connections to prior lessons:**
 - [Link to Week N-1 topic]
 - [Link to Week N-2 topic if relevant]
 
-----------------------------------------------------------------
-JOB MARKET
-----------------------------------------------------------------
+---
 
-Top Matches (pharma/biotech, Director+ level)
+## Job Market
+
+**Top Matches** (pharma/biotech, Director+ level)
 [3-5 roles from WebSearch]
 Each: Title | Company | Location | Why it fits
 
-----------------------------------------------------------------
-WHAT TO WATCH
-----------------------------------------------------------------
+---
 
+## What to Watch
 1. [Specific catalyst with date/level: e.g., "XBI support at $89, resistance $94"]
 2. [PDUFA date: drug, company, indication, date]
 3. [FOMC meeting date]
@@ -401,7 +405,6 @@ WHAT TO WATCH
 6. [Clinical readout expected]
 7. [Macro data release date]
 
-================================================================
-Sources: Gmail, Google Calendar, WebSearch, Tavily, FRED, yfinance, PubMed, ChEMBL, ClinicalTrials.gov
-================================================================
+---
+*Sources: Gmail, Google Calendar, WebSearch, Tavily, FRED, yfinance, PubMed, ChEMBL, ClinicalTrials.gov*
 ```

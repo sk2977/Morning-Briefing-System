@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A Claude Desktop Cowork scheduled task that generates a daily WSJ-style morning briefing at 6:00 AM ET. One prompt file, one Python helper script, one state folder. No framework, no server, no CI/CD.
+A Claude Desktop Cowork scheduled task that generates a daily WSJ-style morning briefing at 6:00 AM ET. Output is an Obsidian vault note. One prompt file, two Python helper scripts, one state folder. No framework, no server, no CI/CD.
 
 ## Architecture
 
@@ -13,7 +13,6 @@ scheduled-prompt.md       -- The entire system: modular prompt for Claude Deskto
 briefing-data/
   fetch_macro.py          -- FRED API + yfinance -> macro_latest.json (run by Cowork each morning)
   fetch_work_email.py     -- Gmail API -> work_emails.json for sakclawbot@gmail.com
-  generate_pdf.py         -- ReportLab -> briefing_YYYYMMDD.pdf (WSJ-style PDF from briefing text)
   macro_latest.json       -- Overwritten each run by fetch_macro.py
   work_emails.json        -- Overwritten each run by fetch_work_email.py
   credentials.json        -- Google OAuth credentials (gitignored)
@@ -22,6 +21,8 @@ briefing-data/
   deals_log.csv           -- Append-only deal database (29 seeded deals, grows daily)
   briefing_log.txt        -- Rolling 7-day FIFO log
 docs/migration-plan.md    -- Full migration plan from OpenClaw (reference for debugging)
+
+Output: C:\Users\skimb\OneDrive\Obsidian Notes\Obsidian Vault\Briefings\YYYY-MM-DD Morning Briefing.md
 ```
 
 The scheduled prompt is built as independent module blocks (`== MODULE: Name ==`). Each module has its own MCP data source, processing logic, and output format. The `== SYNTHESIZE ==` block combines all outputs into the final briefing.
@@ -31,9 +32,6 @@ The scheduled prompt is built as independent module blocks (`== MODULE: Name ==`
 ```bash
 # Test the macro data fetcher (FRED + yfinance)
 cd briefing-data && python fetch_macro.py
-
-# Generate PDF from briefing text
-cd briefing-data && python generate_pdf.py YYYYMMDD
 
 # FRED API key is hardcoded in fetch_macro.py (free tier)
 # Can also be set via: export FRED_API_KEY=your_key
@@ -49,7 +47,7 @@ cd briefing-data && python generate_pdf.py YYYYMMDD
 ## MCP Dependencies (Claude Desktop)
 
 The scheduled prompt relies on these MCP connections:
-- Gmail MCP (kimber01@gmail.com) -- email triage and newsletter scanning
+- Gmail MCP (kimber01@gmail.com) -- email triage and newsletter scanning (read only, no draft creation)
 - Gmail API via fetch_work_email.py (sakclawbot@gmail.com) -- work emails fetched by Python script, written to work_emails.json
 - Google Calendar -- 48h event window
 - WebSearch (built-in, free) -- PDUFA, AI news, jobs, macro fallback
@@ -66,3 +64,4 @@ The scheduled prompt relies on these MCP connections:
 - Only include data from past 48 hours; never backfill with training data
 - Tavily is used only for domain-filtered deal searches (days: 3) + VC research (time_range: week) (~4-5 calls/run)
 - WebSearch (free) handles PDUFA, clinical readouts, AI news, jobs, macro events, and macro fallback queries (~16-19 calls/run)
+- Briefing output is written as an Obsidian markdown note to `Briefings/` folder in the vault

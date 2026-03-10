@@ -3,8 +3,6 @@ work_emails.json
 credentials.json
 token.json
 .env
-briefing_output_*.txt
-briefing_*.txt
 !briefing_log.txt
 _OLD_OpenClaw_DELETE_AFTER_MIGRATION/
 .claude/
