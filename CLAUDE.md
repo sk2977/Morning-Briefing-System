@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A Claude Desktop Cowork scheduled task that generates a daily WSJ-style morning briefing at 6:00 AM ET. Output is an Obsidian vault note. One prompt file, two Python helper scripts, one state folder. No framework, no server, no CI/CD.
+A Claude Desktop Cowork scheduled task that generates a daily WSJ-style morning briefing. Output is an Obsidian vault note. One prompt file, two Python helper scripts, one state folder. No framework, no server, no CI/CD.
 
 ## Architecture
 
@@ -47,10 +47,9 @@ cd briefing-data && python fetch_macro.py
 ## MCP Dependencies (Claude Desktop)
 
 The scheduled prompt relies on these MCP connections:
-- Gmail MCP (kimber01@gmail.com) -- email triage and newsletter scanning (read only, no draft creation)
+- Gmail MCP (kimber01@gmail.com) -- email triage, newsletter intelligence scanning (read only, no draft creation)
 - Gmail API via fetch_work_email.py (sakclawbot@gmail.com) -- work emails fetched by Python script, written to work_emails.json
-- Google Calendar -- 48h event window
-- WebSearch (built-in, free) -- PDUFA, AI news, jobs, macro fallback
+- WebSearch (built-in, free) -- PDUFA, top news, AI updates, jobs, macro fallback
 - Tavily -- domain-filtered deal searches (3 queries) + VC research (1 query) only
 - PubMed -- publication volume trends
 - ChEMBL -- drug mechanism enrichment for education module
@@ -63,5 +62,5 @@ The scheduled prompt relies on these MCP connections:
 - Context blocks required for every deal/trial/update in the briefing output
 - Only include data from past 48 hours; never backfill with training data
 - Tavily is used only for domain-filtered deal searches (days: 3) + VC research (time_range: week) (~4-5 calls/run)
-- WebSearch (free) handles PDUFA, clinical readouts, AI news, jobs, macro events, and macro fallback queries (~16-19 calls/run)
+- WebSearch (free) handles PDUFA, clinical readouts, top news, AI updates, jobs, macro events, and macro fallback queries (~17-20 calls/run)
 - Briefing output is written as an Obsidian markdown note to `Briefings/` folder in the vault

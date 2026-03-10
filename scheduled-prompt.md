@@ -1,6 +1,6 @@
 # Morning Briefing -- Scheduled Prompt for Claude Desktop
 
-Run this at 6:00 AM ET daily. On weekends, use wider search windows (past 72h for deals and macro) and skip the Jobs module.
+On weekends, use wider search windows (past 72h for deals and macro) and skip the Career Opportunities subsection.
 
 ---
 
@@ -23,8 +23,6 @@ Run this at 6:00 AM ET daily. On weekends, use wider search windows (past 72h fo
 
 **Output**: Obsidian vault note at `C:\Users\skimb\OneDrive\Obsidian Notes\Obsidian Vault\Briefings\YYYY-MM-DD Morning Briefing.md`
 
-**Permissions note**: The first time you run this task, click "Run now" and select "Always allow" for every permission prompt (WebSearch, Gmail, Calendar, Tavily, Bash, file read/write). Future runs will auto-approve. To review or revoke, open the task's "Always allowed" panel.
-
 **Format rules**:
 - No emojis. No Unicode symbols. Use text headers and dashes.
 - No template filler -- every line must be grounded in fresh data (past 48h) or state files.
@@ -36,10 +34,13 @@ Run this at 6:00 AM ET daily. On weekends, use wider search windows (past 72h fo
 **Email classification rules**:
 
 SKIP senders (automated/marketing/newsletter):
-noreply, no-reply, donotreply, do-not-reply, newsletter, news@, updates@, digest@, marketing@, promotions@, info@eventbrite, plans.eventbrite, acehotel, hilton, marriott, booking.com, linkedin.com, twitter.com, facebook.com, biopharmcatalyst, fiercepharma, fiercebiotech, endpoints, statnews, biospace, pharmexec, mindstudio, mailchimp, sendgrid, klaviyo, account-services@inform, notifications@fylehq
+noreply, no-reply, donotreply, do-not-reply, newsletter, news@, updates@, digest@, marketing@, promotions@, info@eventbrite, plans.eventbrite, acehotel, hilton, marriott, booking.com, linkedin.com, twitter.com, facebook.com, biopharmcatalyst, pharmexec, mindstudio, mailchimp, sendgrid, klaviyo, account-services@inform, notifications@fylehq
+
+NEWS senders (scan for deal/news intelligence, feed into Top News and Biopharma):
+fiercepharma, fiercebiotech, endpoints, statnews, biospace
 
 PRIORITY senders (always flag):
-shannon, ystsls.com, systsls.com, jenna, simon, philip, ali, herman, hermann, peter, yasmin, corey, yachmetz, levid
+shannon, ystsls.com, jenna, simon, philip, ali, herman, hermann, peter, corey, yachmetz
 
 ACTION keywords (in subject or snippet):
 action required, action needed, approval needed, please approve, please review, please respond, response needed, your response, following up, follow up, follow-up, can you, could you, would you, deadline, due date, by end of, urgent, asap, time sensitive, invitation, invite, rsvp, proposal, agreement, contract, term sheet, loi, meeting request, call request, schedule, question, questions for you, next steps, next step, sign, signature, docusign, payment, invoice, approve
@@ -53,12 +54,12 @@ Execute tool calls in parallel where possible. Group by dependency phase:
 PHASE 1 -- Run these in parallel (no dependencies between them):
 - Bash: python fetch_macro.py
 - Bash: python fetch_work_email.py
-- gcal_list_events (Calendar)
 - gmail_search_messages for kimber01@gmail.com (Email)
 - WebSearch: PDUFA + clinical readout queries (4)
-- WebSearch: AI Tech queries (3)
+- WebSearch: AI Tech queries (2)
+- WebSearch: Top News queries (3)
 - WebSearch: Macro event queries (3)
-- WebSearch: Job queries (3, skip on weekends)
+- WebSearch: Job queries (2, skip on weekends)
 - tavily_search: Deal queries (3, with domain filters, days: 3)
 - tavily_research: VC query (1, time_range: week)
 - search_articles: PubMed queries (5)
@@ -78,18 +79,6 @@ PHASE 3 -- After Phase 2:
 
 ---
 
-== MODULE: Calendar ==
-
-**Tool**: `gcal_list_events`
-**Instructions**:
-1. List events for today and tomorrow (48-hour window)
-2. Flag interviews, deadlines, and important meetings
-3. If no events in 48h, omit this section entirely
-
-**Output**: CRITICAL EVENTS section (only if events exist)
-
----
-
 == MODULE: Email ==
 
 **Tools**: `gmail_search_messages` (kimber01 only), `gmail_read_message` (for top actionable items), read `work_emails.json` (sakclawbot)
@@ -98,14 +87,15 @@ PHASE 3 -- After Phase 2:
 2. Read `C:\Users\skimb\GitHub\Morning Briefing System\briefing-data\work_emails.json` for sakclawbot@gmail.com emails (fetched by `fetch_work_email.py` in Phase 1)
 3. For each email (both sources):
    a. Check sender against SKIP list -- if match, discard
-   b. Check sender against PRIORITY list -- if match, flag HIGH
-   c. Check subject/snippet against ACTION keywords -- if match, flag MEDIUM (or HIGH if also priority sender)
-   d. Otherwise, skip
+   b. Check sender against NEWS list -- if match, extract headlines/deal mentions for Top News and Biopharma modules (do not discard)
+   c. Check sender against PRIORITY list -- if match, flag HIGH
+   d. Check subject/snippet against ACTION keywords -- if match, flag MEDIUM (or HIGH if also priority sender)
+   e. Otherwise, skip
 4. Sort by urgency: HIGH first, then MEDIUM
 5. For top 5 actionable kimber01 emails, use `gmail_read_message` for full context. Work emails from sakclawbot already have body text in the JSON (top 5).
-6. Also scan for newsletter intelligence (pharma/biotech keywords in subjects)
+6. For NEWS sender emails, scan subject lines and snippets for: deal announcements, clinical trial results, FDA decisions, company news, and market-moving headlines. Pass these signals to the Top News and Biopharma modules.
 
-**Output**: EMAIL -- ACTION NEEDED section + newsletter signals for Point 7
+**Output**: EMAIL -- ACTION NEEDED section + newsletter intelligence for Top News and Biopharma
 
 ---
 
@@ -177,16 +167,30 @@ PHASE 3 -- After Phase 2:
 
 ---
 
+== MODULE: Top News ==
+
+**Tools**: `WebSearch` (3 queries), newsletter intelligence from Email module
+**Instructions**:
+1. WebSearch: "major world news geopolitics today [current date] 2026"
+2. WebSearch: "breaking news markets economy trade policy tariffs today [current date] 2026"
+3. WebSearch: "global news impact financial markets stocks today [current date] 2026"
+4. Merge with any market-relevant headlines extracted from NEWS sender emails (FierceBiotech, STAT, etc.)
+5. Prioritize: geopolitical developments, trade/tariff policy, regulatory shifts, conflict/sanctions -- anything with downstream market impact
+6. For each headline, add a one-line "Market implication" note
+
+**Output**: TOP NEWS HEADLINES section (3-5 headlines, market-impact prioritized)
+
+---
+
 == MODULE: AI Tech ==
 
-**Tools**: `WebSearch` (3 queries)
+**Tools**: `WebSearch` (2 queries)
 **Instructions**:
-1. WebSearch: "Claude Anthropic release update 2026 past 24 hours"
-2. WebSearch: "OpenAI GPT release update 2026 past 24 hours"
-3. WebSearch: "Google Gemini AI release update 2026 past 24 hours"
-4. Also check via WebSearch: "AI drug discovery biopharma 2026 today"
+1. WebSearch: "Claude Anthropic OpenAI GPT AI release update 2026 this week"
+2. WebSearch: "Google Gemini AI release update 2026 this week"
+3. Only include material releases, not minor updates
 
-**Output**: AI TECHNOLOGY section
+**Output**: AI MODEL UPDATES subsection under Top News & Technology
 
 ---
 
@@ -236,19 +240,18 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Jobs ==
 
-**Tools**: `WebSearch` (3 queries)
+**Tools**: `WebSearch` (2 queries, skip on weekends)
 **Instructions**:
 1. Run targeted job searches:
-   - WebSearch: "director VP biopharma biotech job opening 2026 today"
-   - WebSearch: "pharma business development strategy investment director job 2026 today"
-   - WebSearch: "healthcare life sciences venture capital analyst director job 2026 today"
+   - WebSearch: "director VP biopharma biotech business development job opening 2026 this week"
+   - WebSearch: "pharma healthcare life sciences strategy investment director job 2026 this week"
 2. Filter for:
    - Director+ level
    - Pharma, biotech, healthcare, life sciences
    - Relevant functions: BD, strategy, investments, portfolio, analytics
 3. Present top 3-5 matches with: Title | Company | Location | Why it fits
 
-**Output**: JOB MARKET section
+**Output**: Career Opportunities subsection under Biopharma
 
 ---
 
@@ -257,7 +260,7 @@ PHASE 3 -- After Phase 2:
 Combine all module outputs into the final briefing format below. Apply these rules:
 - Only include data from the past 48 hours (deals, news, trials). Macro numbers and education are exempt.
 - Context blocks for EVERY deal/trial/update -- no exceptions.
-- YOUR MOVE (#10) must be concrete and actionable.
+- YOUR MOVE (#9) must be concrete and actionable.
 - Omit sections with no fresh data.
 - After producing the briefing, write it as an Obsidian note to `C:\Users\skimb\OneDrive\Obsidian Notes\Obsidian Vault\Briefings\YYYY-MM-DD Morning Briefing.md` (e.g., `2026-03-09 Morning Briefing.md`). Create the `Briefings/` folder if it does not exist.
 - Update `briefing_log.txt`: append today's entry, remove entries older than 7 days.
@@ -271,21 +274,17 @@ date: YYYY-MM-DD
 ---
 
 # Morning Briefing -- [Today's Date, e.g. March 9, 2026]
-*~10 min read | 6:00 AM ET*
+*~10 min read*
 
 ---
-
-> [!warning] Critical Events (next 48h)
-> [From Google Calendar: interviews, deadlines, important meetings]
-> [If none: omit this callout entirely]
 
 ## Email -- Action Needed
 [Top 5 actionable emails, sorted by urgency]
 [Each entry: sender | subject | action needed | urgency (HIGH/MEDIUM/LOW)]
 [Skip: noreply, newsletters, marketing, LinkedIn notifications]
-[Priority senders flagged: shannon, corey, jenna, simon, philip, ali, herman, peter, yasmin]
+[Priority senders flagged: shannon, corey, jenna, simon, philip, ali, herman, peter, yachmetz]
 
-## Today's 10 Points
+## Today's Key Points
 1. [Market/XBI sentiment -- from macro_latest.json]
 2. [Top biopharma deal -- from Tavily deal search]
    > Modality: [type, mechanism, advantages/limitations]
@@ -296,12 +295,11 @@ date: YYYY-MM-DD
 3. [Therapeutic area signal -- pattern from multiple deals/trials]
 4. [VC pulse -- notable round >$10M from tavily_research]
 5. [Clinical/regulatory catalyst -- from WebSearch + Clinical Trials MCP]
-6. [AI technology update -- from WebSearch]
-7. [Newsletter signal -- from Gmail newsletter scan]
-8. [Job market intel -- from WebSearch job queries]
-9. [Macro context -- from macro_latest.json]
-10. > [!tip] Your Move
-    > [Most actionable item today -- specific, concrete next step]
+6. [Top news headline -- geopolitical or market-moving development from WebSearch + newsletters]
+7. [Newsletter signal -- from Gmail NEWS sender scan]
+8. [Macro context -- from macro_latest.json]
+9. > [!tip] Your Move
+   > [Most actionable item today -- specific, concrete next step]
 
 ---
 
@@ -327,6 +325,10 @@ date: YYYY-MM-DD
 
 ### VC / Private Markets (past 48h)
 [Rounds >$10M from tavily_research]
+
+### Career Opportunities (Director+, skip on weekends)
+[3-5 roles from WebSearch]
+Each: Title | Company | Location | Why it fits
 
 ---
 
@@ -357,15 +359,15 @@ date: YYYY-MM-DD
 
 ---
 
-## AI Technology
+## Top News & Technology
 
-### Model Releases & Updates (past 48h)
-[Claude/OpenAI/Gemini from WebSearch]
+### Top Headlines (past 48h)
+[3-5 geopolitical/market-moving headlines from WebSearch + newsletter intelligence]
+[Each with one-line "Market implication" note]
+[Prioritize: geopolitics, trade/tariff policy, regulatory shifts, conflict/sanctions]
 
-### AI x Biopharma (past 48h)
-[Intersection news if any]
-
-**Strategic Signal**: [One sentence grounded in specific past-48h development]
+### AI Model Updates (past 48h)
+[Material Claude/OpenAI/Gemini releases from WebSearch -- omit if nothing significant]
 
 ---
 
@@ -388,14 +390,6 @@ date: YYYY-MM-DD
 
 ---
 
-## Job Market
-
-**Top Matches** (pharma/biotech, Director+ level)
-[3-5 roles from WebSearch]
-Each: Title | Company | Location | Why it fits
-
----
-
 ## What to Watch
 1. [Specific catalyst with date/level: e.g., "XBI support at $89, resistance $94"]
 2. [PDUFA date: drug, company, indication, date]
@@ -406,5 +400,5 @@ Each: Title | Company | Location | Why it fits
 7. [Macro data release date]
 
 ---
-*Sources: Gmail, Google Calendar, WebSearch, Tavily, FRED, yfinance, PubMed, ChEMBL, ClinicalTrials.gov*
+*Sources: Gmail, WebSearch, Tavily, FRED, yfinance, PubMed, ChEMBL, ClinicalTrials.gov*
 ```
