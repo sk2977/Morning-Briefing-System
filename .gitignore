@@ -1,0 +1,11 @@
+macro_latest.json
+work_emails.json
+credentials.json
+token.json
+.env
+config.yaml
+briefing_log.txt
+output/*
+!output/.gitkeep
+.claude/
+__pycache__/

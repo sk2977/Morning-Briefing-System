@@ -1,0 +1,23 @@
+# Copy this file to config.yaml and fill in your values.
+# config.yaml is gitignored -- your personal settings stay local.
+
+# Gmail accounts (connect both in Claude Desktop MCP settings)
+personal_gmail: your_personal_email@gmail.com
+work_gmail: your_work_email@gmail.com
+
+# Output path for the daily briefing (Obsidian vault recommended)
+# Leave empty to output in Cowork chat + save to output/ folder in this repo
+obsidian_vault_path: ""
+# Example: "C:\\Users\\you\\Obsidian Vault"
+
+# Priority email senders (comma-separated names or domains to flag as HIGH)
+priority_senders: ""
+# Example: "alice, bob, example.com, charlie"
+
+# Email senders to always skip (automated/marketing) -- defaults built into prompt
+# Only add extras here; the prompt already skips noreply, newsletters, etc.
+extra_skip_senders: ""
+
+# Set to false if you don't have a Tavily MCP server connected.
+# Deal searches and VC research will fall back to WebSearch.
+tavily_available: true
