@@ -34,6 +34,7 @@ On weekends, use wider search windows (past 72h for deals and macro).
 - Cite data dates, source names, exact numbers. No vague claims.
 - If no fresh data for a section, write "No new developments in the past 48 hours."
 - Context blocks are REQUIRED for every deal, trial result, pipeline update, or strategic move.
+- Include source links: for every deal, news headline, clinical result, and VC round, append a markdown hyperlink to the source article -- e.g., `([FierceBiotech](https://url))`. Use the URLs returned by Tavily/WebSearch. Multiple sources per item are fine. This lets the reader click through for full coverage.
 - Use `[[wikilinks]]` for key entities throughout the briefing: company names (e.g. [[Gilead]], [[Sanofi]]), drug targets (e.g. [[EGFR]], [[PD-L1]]), modalities (e.g. [[ADC]], [[CAR-T]], [[bispecific antibody]]), indications/diseases (e.g. [[NSCLC]], [[multiple myeloma]], [[obesity]]), and key mechanisms (e.g. [[checkpoint inhibitor]], [[GLP-1 agonist]]). This builds a knowledge graph over time in Obsidian. Non-Obsidian users can ignore the brackets.
 
 **Email classification rules**:
