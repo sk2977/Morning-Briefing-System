@@ -1,10 +1,10 @@
 {
   "version": "1.0",
-  "started": "2026-03-12",
+  "started": "",
   "current_month_theme": "Drug Modalities & Platform Science",
   "current_week": 1,
-  "current_day": 2,
-  "total_lessons_completed": 1,
+  "current_day": 1,
+  "total_lessons_completed": 0,
   "monthly_themes": [
     {
       "month": 1,
@@ -85,16 +85,7 @@
       ]
     }
   ],
-  "lessons_completed": [
-    {
-      "date": "2026-03-12",
-      "week": 1,
-      "topic": "Antibody-Drug Conjugates (ADCs)",
-      "day_type": "DEAL_ANGLE",
-      "subtopic": "ADC deal structuring and valuation premiums",
-      "news_override": false
-    }
-  ],
+  "lessons_completed": [],
   "connections_made": [],
   "synthesis_notes": []
 }

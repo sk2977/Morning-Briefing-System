@@ -1,10 +1,13 @@
 macro_latest.json
-work_emails.json
+*_emails.json
 credentials.json
 token.json
+token_*.json
 .env
 config.yaml
 briefing_log.txt
+curriculum_state.json
+deals_log.csv
 output/*
 !output/.gitkeep
 .claude/

@@ -10,7 +10,7 @@ On weekends, use wider search windows (past 72h for deals and macro).
 
 **User config**: Read `briefing-data/config.yaml` at the start of each run. It contains:
 - `personal_gmail` -- personal Gmail account (connected via MCP)
-- `work_gmail` -- work Gmail account (fetched by fetch_work_email.py)
+- `work_gmail` -- work Gmail account
 - `obsidian_vault_path` -- path to Obsidian vault (empty = use output/ folder + print in chat)
 - `priority_senders` -- comma-separated names/domains to flag as HIGH priority
 - `extra_skip_senders` -- additional senders to skip (beyond the built-in list)
@@ -18,9 +18,9 @@ On weekends, use wider search windows (past 72h for deals and macro).
 
 **State folder**: `briefing-data/` (relative to repo root)
 - `fetch_macro.py` -- Python script for FRED + yfinance data (run this first)
-- `fetch_work_email.py` -- Python script for work Gmail emails via Gmail API (run in Phase 1)
+- `fetch_emails.py` -- Python script for Gmail emails via Gmail API (usage: `python fetch_emails.py <label> <email>`)
 - `macro_latest.json` -- written by fetch_macro.py each run
-- `work_emails.json` -- written by fetch_work_email.py each run
+- `<label>_emails.json` -- written by fetch_emails.py each run (e.g. work_emails.json, personal_emails.json)
 - `curriculum_state.json` -- education progress tracker
 - `deals_log.csv` -- persistent deal database (append new deals each run)
 - `briefing_log.txt` -- rolling 7-day log
@@ -59,22 +59,27 @@ Execute tool calls in parallel where possible. Group by dependency phase:
 
 PHASE 1 -- Run these in parallel (no dependencies between them):
 - Bash: python fetch_macro.py
-- Bash: python fetch_work_email.py
-- gmail_search_messages for personal_gmail (Email)
+- Email: For EACH configured account in config.yaml (personal_gmail -> label "personal", work_gmail -> label "work"),
+  try methods sequentially until one succeeds (the per-account fetching itself runs in parallel with other Phase 1 tasks):
+  1. MCP: gmail_search_messages query:"is:unread newer_than:1d" (works in Claude Desktop)
+  2. Bash: python fetch_emails.py <label> <email> (works anywhere with credentials.json)
+  3. Bash: gws gmail +triage (works with gws CLI auth -- shows unread inbox summary with sender, subject, date, id)
+  Skip any account where the config value is empty.
 - WebSearch: PDUFA + clinical readout queries (4)
 - WebSearch: AI Tech queries (2)
 - WebSearch: Top News queries (3)
 - WebSearch: Macro event queries (3)
 - tavily_search: Deal queries (3, with domain filters, days: 3) -- or WebSearch if tavily_available is false
 - tavily_research: VC query (1, time_range: week) -- or WebSearch if tavily_available is false
-- search_articles: PubMed queries (5)
+- search_articles: PubMed queries (5) -- skip if PubMed MCP unavailable
 
 PHASE 2 -- After Phase 1 results return:
-- gmail_read_message for top 5 actionable personal_gmail emails
-- Read work_emails.json (work_gmail emails already fetched)
-- tavily_extract for top 3-5 deal articles
-- search_trials for any PDUFA/catalyst hits
-- drug_search / get_mechanism for education enrichment
+- For each account where email data was obtained:
+  - If via MCP: gmail_read_message for top 5 actionable emails
+  - If via Python script: read <label>_emails.json (top 5 already have bodies)
+  - If via gws CLI: run gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full"}' --format json for top 5 actionable emails
+- search_trials for any PDUFA/catalyst hits -- skip if Clinical Trials MCP unavailable
+- drug_search / get_mechanism for education enrichment -- skip if ChEMBL MCP unavailable
 - Read macro_latest.json + curriculum_state.json
 
 PHASE 3 -- After Phase 2:
@@ -86,19 +91,29 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Email ==
 
-**Tools**: `gmail_search_messages` (personal_gmail only), `gmail_read_message` (for top actionable items), read `work_emails.json` (work_gmail)
+**Tools (fallback chain -- try in order per account)**:
+1. MCP `gmail_search_messages` / `gmail_read_message` -- works in Claude Desktop with Gmail MCP
+2. `python fetch_emails.py <label> <email>` -- works anywhere with `credentials.json` in briefing-data/
+3. `gws gmail +triage` (list unread) / `gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full"}'` (read body) -- works with gws CLI auth
+
 **Instructions**:
-1. Search personal_gmail (from config.yaml): `is:unread newer_than:1d` -- get up to 20 results
-2. Read `briefing-data/work_emails.json` for work_gmail emails (fetched by `fetch_work_email.py` in Phase 1)
-3. For each email (both sources):
+1. For each configured account (personal_gmail, work_gmail from config.yaml):
+   a. Try MCP: `gmail_search_messages` query:"is:unread newer_than:1d" -- if tool exists and succeeds, use results
+   b. If MCP unavailable or errors: run `python briefing-data/fetch_emails.py <label> <email>`, then read `<label>_emails.json`
+   c. If Python fails (no credentials.json): run `gws gmail +triage` to list unread emails (returns sender, subject, date, id in table format)
+   d. If all methods fail: skip this account, note "No email data for <label>"
+2. For each email (all sources):
    a. Check sender against SKIP list -- if match, discard
    b. Check sender against NEWS list -- if match, extract headlines/deal mentions for Top News and Biopharma modules (do not discard)
    c. Check sender against PRIORITY list -- if match, flag HIGH
    d. Check subject/snippet against ACTION keywords -- if match, flag MEDIUM (or HIGH if also priority sender)
    e. Otherwise, skip
-4. Sort by urgency: HIGH first, then MEDIUM
-5. For top 5 actionable personal_gmail emails, use `gmail_read_message` for full context. Work emails already have body text in the JSON (top 5).
-6. For NEWS sender emails, scan subject lines and snippets for: deal announcements, clinical trial results, FDA decisions, company news, and market-moving headlines. Pass these signals to the Top News and Biopharma modules.
+3. Sort by urgency: HIGH first, then MEDIUM
+4. For top 5 actionable emails per account, get full body text:
+   - MCP: use `gmail_read_message`
+   - Python script: bodies already included in JSON for top 5
+   - gws CLI: use `gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full"}' --format json`
+5. For NEWS sender emails, scan subject lines and snippets for: deal announcements, clinical trial results, FDA decisions, company news, and market-moving headlines. Pass these signals to the Top News and Biopharma modules.
 
 **Output**: EMAIL -- ACTION NEEDED section + newsletter intelligence for Top News and Biopharma
 
@@ -106,17 +121,18 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Deals ==
 
-**Tools**: `tavily_search` (3 queries, `days: 3`, `topic: "news"`), `tavily_extract` (for top articles). If `tavily_available` is false in config.yaml, use `WebSearch` instead (same queries, append "site:fiercebiotech.com OR site:endpts.com OR site:statnews.com" to each).
+**Tools**: `tavily_search` (3 queries). If `tavily_available` is false in config.yaml, use `WebSearch` instead (same queries, append "site:fiercebiotech.com OR site:endpts.com OR site:statnews.com" to each).
 **Instructions**:
-1. Run these 3 searches (days: 3, topic: "news", include_domains: fiercebiotech.com, endpts.com, statnews.com, biopharmadive.com, reuters.com, bloomberg.com):
+1. Compute start_date as 7 days before today in YYYY-MM-DD format (matches "past 7 days" deal flow window).
+2. Run these 3 searches in parallel (topic: "news", search_depth: "advanced", include_raw_content: true, max_results: 7, start_date: <computed>, include_domains: [fiercebiotech.com, endpts.com, statnews.com, biopharmadive.com]):
    - "biopharma acquisition M&A merger deal 2026"
    - "pharma biotech licensing agreement partnership collaboration 2026"
    - "drug deal milestone upfront payment announced 2026"
-2. Deduplicate by company names
-3. For top 3-5 unique deals, use `tavily_extract` to get full article content
-4. For each deal, extract: acquirer, target, drug_name, modality, therapeutic_area, disease, stage, upfront_m, milestone_m, total_m, region, strategic_rationale
-5. Append new deals to `deals_log.csv` (check date + acquirer + target to avoid duplicates)
-6. Build context block for EVERY deal:
+3. Deduplicate by company names
+4. Full article content is already in raw_content from search results -- no separate tavily_extract step needed.
+5. For each deal, extract: acquirer, target, drug_name, modality, therapeutic_area, disease, stage, upfront_m, milestone_m, total_m, region, strategic_rationale
+6. Append new deals to `deals_log.csv` (check date + acquirer + target to avoid duplicates)
+7. Build context block for EVERY deal:
    > Modality: [type -- explain mechanistically, key advantages/limitations]
    > Disease: [what it is, global patient population, burden]
    > Unmet need: [what current treatments miss, why this matters]
@@ -149,7 +165,7 @@ PHASE 3 -- After Phase 2:
 
 **Tool**: `tavily_research` (1 query). If `tavily_available` is false in config.yaml, use `WebSearch` instead.
 **Instructions**:
-1. Research query: "biotech venture capital Series A B C funding round 2026 this week" -- use time_range: "week" (past 7 days)
+1. Research input: "biotech venture capital Series A B C funding round 2026 this week, rounds over $10M, include company name, amount raised, lead investor, therapeutic focus" (model: "mini")
 2. Filter for rounds >$10M
 3. Note company, amount, lead investor, therapeutic focus, stage
 
@@ -159,13 +175,13 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: PDUFA ==
 
-**Tools**: `WebSearch`, `search_trials` (Clinical Trials MCP)
+**Tools**: `WebSearch`, `search_trials` (Clinical Trials MCP, optional)
 **Instructions**:
 1. WebSearch: "PDUFA date FDA approval decision 2026 [current month]"
 2. WebSearch: "biotech clinical trial results phase 2 phase 3 data readout 2026 this week"
 3. WebSearch: "drug approval regulatory decision EMA NMPA 2026 this week"
 4. WebSearch: "biotech earnings report results Q1 2026 today"
-5. For any hits, use `search_trials` to get trial details (phase, endpoints, enrollment)
+5. If Clinical Trials MCP is available, use `search_trials` to get trial details (phase, endpoints, enrollment). Otherwise, use WebSearch results only.
 6. Flag any results with >10% stock move or clinically significant endpoints (e.g., p<0.001, OS/PFS improvement >3mo, response rate >50%)
 
 **Output**: Clinical Trial Results & Regulatory subsection + WHAT TO WATCH entries
@@ -201,7 +217,7 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Science ==
 
-**Tool**: `search_articles` (PubMed MCP)
+**Tool**: `search_articles` (PubMed MCP, optional -- skip this module if PubMed MCP is unavailable)
 **Instructions**:
 1. Search 5 therapeutic areas for publication volume signals:
    - "antibody drug conjugate" (past 30 days)
@@ -218,7 +234,7 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Education ==
 
-**Tools**: Read `curriculum_state.json`, `drug_search` / `get_mechanism` (ChEMBL MCP)
+**Tools**: Read `curriculum_state.json`, `drug_search` / `get_mechanism` (ChEMBL MCP, optional)
 **Instructions**:
 1. Read `briefing-data/curriculum_state.json`
 2. Determine today's lesson:
@@ -228,7 +244,7 @@ PHASE 3 -- After Phase 2:
    - NEWS OVERRIDE: If the day's top deal or clinical readout directly involves a different modality/mechanism, teach THAT mechanism instead using the same day-type lens. Example: if today is COMPETITIVE day on "Bispecifics" but the top deal is a CAR-T acquisition, teach competitive positioning of CAR-T vs bispecifics. Log the override topic in curriculum_state.json as a bonus lesson (do not advance the week counter).
 3. Write 400-600 word lesson covering:
    - Core mechanism or concept
-   - Real clinical data or case study (use ChEMBL `drug_search` or `get_mechanism` to enrich with real drug data)
+   - Real clinical data or case study (if ChEMBL MCP is available, use `drug_search` or `get_mechanism` to enrich with real drug data; otherwise use WebSearch)
    - Competitive landscape context
    - Investment / deal implications
    - Key takeaway for pattern recognition
@@ -306,7 +322,7 @@ date: YYYY-MM-DD
 [From Tavily searches]
 
 ### Clinical Trial Results & Regulatory (past 48h)
-[From WebSearch + Clinical Trials MCP search_trials]
+[From WebSearch + Clinical Trials MCP if available]
 
 ### Therapeutic Area Signals
 [Synthesize patterns from deals + trials + PubMed volumes]
@@ -384,5 +400,5 @@ date: YYYY-MM-DD
 7. [Macro data release date]
 
 ---
-*Sources: Gmail, WebSearch, Tavily, FRED, yfinance, PubMed, ChEMBL, ClinicalTrials.gov*
+*Sources: Gmail, WebSearch, FRED, yfinance (+ Tavily, PubMed, ChEMBL, ClinicalTrials.gov if configured)*
 ```

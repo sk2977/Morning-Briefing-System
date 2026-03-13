@@ -5,7 +5,7 @@ Claude Desktop Cowork scheduled task that delivers a daily WSJ-style briefing at
 ## What It Produces
 
 A ~10 minute read covering:
-- Actionable emails from two Gmail accounts (personal + work)
+- Actionable emails from one or two Gmail accounts (personal, optionally work)
 - 9-point summary (market sentiment, top deal, VC pulse, regulatory catalysts, AI news)
 - Biopharma deep dive: M&A/deal flow with context blocks, clinical trials, therapeutic area signals, VC rounds
 - Macro environment: FRED rates, market indices, key dates (FOMC, PDUFA)
@@ -25,13 +25,15 @@ briefing-data/
   .env                           -- API keys (gitignored)
   .env.example                   -- Template for .env
   fetch_macro.py                 -- FRED + yfinance helper (run by Cowork each morning)
-  fetch_work_email.py            -- Gmail API helper for work email
+  fetch_emails.py                -- Gmail API helper (usage: python fetch_emails.py <label> <email>)
   macro_latest.json              -- Written by fetch_macro.py each run (gitignored)
-  work_emails.json               -- Written by fetch_work_email.py each run (gitignored)
+  *_emails.json                  -- Written by fetch_emails.py each run (gitignored)
   credentials.json               -- Google OAuth credentials (gitignored)
-  token.json                     -- Google OAuth token (gitignored)
-  curriculum_state.json          -- Education progress tracker
-  deals_log.csv                  -- Persistent deal database (append-only)
+  token_*.json                   -- Per-account OAuth tokens (gitignored)
+  curriculum_state.json          -- Education progress tracker (gitignored)
+  curriculum_state.example.json  -- Template for curriculum_state.json (committed)
+  deals_log.csv                  -- Persistent deal database, append-only (gitignored)
+  deals_log.example.csv          -- Template for deals_log.csv (committed)
   briefing_log.txt               -- Rolling 7-day log (gitignored)
 output/                          -- Fallback output directory (gitignored)
 ```
@@ -41,7 +43,7 @@ output/                          -- Fallback output directory (gitignored)
 ### 1. Clone and install dependencies
 
 ```bash
-git clone https://github.com/your-username/Morning-Briefing-System.git
+git clone https://github.com/sk2977/Morning-Briefing-System.git
 cd Morning-Briefing-System
 pip install -r requirements.txt
 ```
@@ -54,6 +56,9 @@ cp briefing-data/.env.example briefing-data/.env
 
 cp briefing-data/config.example.yaml briefing-data/config.yaml
 # Edit config.yaml: add your Gmail addresses, Obsidian vault path, priority senders
+
+cp briefing-data/curriculum_state.example.json briefing-data/curriculum_state.json
+cp briefing-data/deals_log.example.csv briefing-data/deals_log.csv
 ```
 
 ### 3. Set up Google OAuth for work Gmail
@@ -64,7 +69,8 @@ The work Gmail account is accessed via the Gmail API (not MCP). You need OAuth c
 2. Create a project and enable the Gmail API
 3. Create OAuth 2.0 credentials (Desktop app type)
 4. Download `credentials.json` to `briefing-data/`
-5. Run `python briefing-data/fetch_work_email.py` once to complete OAuth flow in browser
+5. Run `python briefing-data/fetch_emails.py work your_work@gmail.com` once to complete OAuth flow in browser
+6. (Optional) Run `python briefing-data/fetch_emails.py personal your_personal@gmail.com` for personal account too
 
 ### 4. Create Claude Desktop scheduled task
 
@@ -74,14 +80,13 @@ The work Gmail account is accessed via the Gmail API (not MCP). You need OAuth c
 4. Paste the content of `scheduled-prompt.md` as task instructions
 5. Set cadence: Weekdays, 6:00 AM
 
-### 5. Connect MCP servers in Claude Desktop
+### 5. Connect MCP servers in Claude Desktop (optional)
 
-Connect these in Claude Desktop settings:
-- Gmail (your personal email account)
-- Tavily
-- PubMed
-- ChEMBL
-- Clinical Trials
+Connect your personal Gmail as an MCP server in Claude Desktop (recommended for best email integration). The following MCP servers are optional enhancements -- the briefing works without them:
+- **Tavily** -- Better deal search quality. Without it, set `tavily_available: false` in config.yaml.
+- **PubMed** -- Publication volume trends in education module
+- **ChEMBL** -- Drug mechanism enrichment in education module
+- **Clinical Trials** -- Trial status lookups for catalyst tracking
 
 ### 6. Approve permissions
 
@@ -95,10 +100,9 @@ Note: Computer must be awake and Claude Desktop open at run time. If asleep, it 
 |--------|------|------|------|
 | FRED API | fetch_macro.py | Fed Funds, 10Y, unemployment, CPI, oil | Free |
 | yfinance | fetch_macro.py | S&P 500, XBI, Russell 2000 | Free |
-| Gmail MCP | scheduled prompt | Personal emails | Free |
-| Gmail API | fetch_work_email.py | Work emails | Free |
+| Gmail | MCP -> fetch_emails.py -> gws CLI (fallback chain) | Email triage | Free |
 | WebSearch | scheduled prompt | PDUFA, AI news, macro fallback | Free |
-| Tavily MCP | scheduled prompt | Domain-filtered deal searches (3), VC research (1) | ~4-5 calls/run |
+| Tavily MCP | scheduled prompt | Deal searches (3, advanced+raw_content), VC research (1) | ~4 calls/run, 7 credits |
 | PubMed MCP | scheduled prompt | Publication volume trends | Free |
 | ChEMBL MCP | scheduled prompt | Drug mechanism enrichment | Free |
 | Clinical Trials MCP | scheduled prompt | Trial status for catalysts | Free |

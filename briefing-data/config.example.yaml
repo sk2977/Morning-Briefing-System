@@ -1,7 +1,11 @@
 # Copy this file to config.yaml and fill in your values.
 # config.yaml is gitignored -- your personal settings stay local.
 
-# Gmail accounts (connect both in Claude Desktop MCP settings)
+# Gmail accounts -- email fetching uses a fallback chain per account:
+#   1. MCP gmail_search_messages (Claude Desktop with Gmail MCP)
+#   2. python fetch_emails.py (requires credentials.json from Google Cloud Console)
+#   3. gws gmail CLI (requires gws auth setup)
+# Leave empty to skip an account entirely.
 personal_gmail: your_personal_email@gmail.com
 work_gmail: your_work_email@gmail.com
 

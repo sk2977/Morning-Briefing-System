@@ -15,6 +15,35 @@ Claude will read this file and guide you through each step interactively, asking
 - A Gmail account (personal). Work Gmail is optional.
 - (Optional) An [Obsidian](https://obsidian.md/) vault for output
 
+## What you get at each level
+
+**Free tier (just Claude Desktop + FRED API key):**
+- Market data (S&P 500, XBI, Russell 2000, rates, oil)
+- Top news headlines, PDUFA dates, clinical readouts, AI updates (all via WebSearch)
+- Biopharma deal flow and VC rounds (via WebSearch -- less precise than Tavily)
+- Daily education curriculum (400-600 word lessons, 3-month rotation)
+- Macro environment with key dates (FOMC, CPI, NFP)
+
+**+ Gmail MCP server (free, recommended):**
+- Email triage with priority flagging and action detection
+- Newsletter intelligence (FierceBiotech, STAT, Endpoints) feeds into deal/news sections
+
+**+ Tavily MCP server (paid, ~7 credits/run):**
+- Higher-quality deal searches with domain filtering and full article content
+- VC funding round research with structured output
+
+**+ PubMed, ChEMBL, Clinical Trials MCP servers (free):**
+- Publication volume trends by therapeutic area (PubMed)
+- Drug mechanism enrichment in education lessons (ChEMBL)
+- Trial detail lookups for regulatory catalysts (Clinical Trials)
+
+**+ Work Gmail via Google Cloud OAuth (free, more setup):**
+- Second email account triage (e.g., work inbox alongside personal)
+
+**+ Obsidian vault (free):**
+- Briefing saved as a daily note with wikilinks that build a knowledge graph over time
+- Without Obsidian, briefing prints in Cowork chat and saves to `output/` folder
+
 ## Setup Steps
 
 ### 1. Install Python dependencies
@@ -23,9 +52,16 @@ Claude will read this file and guide you through each step interactively, asking
 pip install -r requirements.txt
 ```
 
-### 2. Create config.yaml
+### 2. Create config and state files
 
-Copy `briefing-data/config.example.yaml` to `briefing-data/config.yaml` and fill in:
+```bash
+cp briefing-data/config.example.yaml briefing-data/config.yaml
+cp briefing-data/.env.example briefing-data/.env
+cp briefing-data/curriculum_state.example.json briefing-data/curriculum_state.json
+cp briefing-data/deals_log.example.csv briefing-data/deals_log.csv
+```
+
+Edit `config.yaml` and fill in:
 
 - **personal_gmail**: Your personal Gmail address (must be connected as a Gmail MCP server in Claude Desktop)
 - **work_gmail**: Your work Gmail address (optional -- leave blank to skip work email module)
@@ -34,12 +70,12 @@ Copy `briefing-data/config.example.yaml` to `briefing-data/config.yaml` and fill
 - **extra_skip_senders**: Additional senders to always skip (the prompt already skips common automated senders)
 - **tavily_available**: Set to `false` if you don't have a Tavily MCP server configured
 
-### 3. Create .env
+### 3. Configure .env
 
-Copy `briefing-data/.env.example` to `briefing-data/.env` and fill in:
+Edit `briefing-data/.env` and fill in:
 
 - **FRED_API_KEY**: Free API key from https://fred.stlouisfed.org/docs/api/api_key.html (takes 30 seconds to register)
-- **WORK_GMAIL_ADDRESS**: Same as work_gmail in config.yaml (used by the Python script)
+- **WORK_GMAIL_ADDRESS**: Same as work_gmail in config.yaml (used by the Python script, optional)
 
 ### 4. Gmail MCP server (personal)
 
@@ -55,8 +91,9 @@ If you have a work Gmail account:
 2. Enable the Gmail API
 3. Create OAuth 2.0 credentials (Desktop app type)
 4. Download the credentials JSON file and save it as `briefing-data/credentials.json`
-5. Run `cd briefing-data && python fetch_work_email.py` -- this will open a browser for OAuth consent on first run
-6. After authenticating, `token.json` is saved and auto-refreshes on future runs
+5. Run `cd briefing-data && python fetch_emails.py work your_work@gmail.com` -- this will open a browser for OAuth consent on first run
+6. After authenticating, `token_work.json` is saved and auto-refreshes on future runs
+7. For personal Gmail too: `python fetch_emails.py personal your_personal@gmail.com` (same credentials.json, separate token)
 
 If you don't have a work Gmail account, skip this step. The briefing will work without it.
 
