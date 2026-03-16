@@ -63,8 +63,13 @@ cp briefing-data/deals_log.example.csv briefing-data/deals_log.csv
 
 Edit `config.yaml` and fill in:
 
-- **personal_gmail**: Your personal Gmail address (must be connected as a Gmail MCP server in Claude Desktop)
-- **work_gmail**: Your work Gmail address (optional -- leave blank to skip work email module)
+- **personal_gmail**: Your personal Gmail address (leave blank to skip)
+- **work_gmail**: Your work Gmail address (optional -- leave blank to skip)
+- **personal_gmail_method** / **work_gmail_method**: How to fetch email for each account (optional, default: `"auto"`):
+  - `"auto"` -- try MCP -> fetch_emails.py -> gws CLI, stop at first success
+  - `"mcp"` -- Gmail MCP server only (Claude Desktop)
+  - `"fetch"` -- `fetch_emails.py` only (requires `credentials.json` from Google Cloud Console)
+  - `"gws"` -- `gws` CLI only (requires `gws auth` setup)
 - **obsidian_vault_path**: Full path to your Obsidian vault (optional -- leave blank to output to `output/` folder)
 - **priority_senders**: Comma-separated names or domains to flag as HIGH priority in email triage
 - **extra_skip_senders**: Additional senders to always skip (the prompt already skips common automated senders)
@@ -77,25 +82,32 @@ Edit `briefing-data/.env` and fill in:
 - **FRED_API_KEY**: Free API key from https://fred.stlouisfed.org/docs/api/api_key.html (takes 30 seconds to register)
 - **WORK_GMAIL_ADDRESS**: Same as work_gmail in config.yaml (used by the Python script, optional)
 
-### 4. Gmail MCP server (personal)
+### 4. Gmail setup (choose one method per account)
 
-Connect your personal Gmail as an MCP server in Claude Desktop:
+There are three ways to fetch email. Pick one per account and set `<label>_gmail_method` in `config.yaml`:
+
+**Option A: Gmail MCP server (method: "mcp") -- recommended for Claude Desktop**
 1. Open Claude Desktop Settings > MCP Servers
-2. Add the Gmail MCP server and authenticate with your personal Gmail account
+2. Add the Gmail MCP server and authenticate with your Gmail account
 3. The briefing uses read-only access -- it never sends emails or creates drafts
+4. Set `personal_gmail_method: "mcp"` in config.yaml
 
-### 5. Work Gmail API setup (optional)
+**Option B: gws CLI (method: "gws") -- recommended for Claude Code**
+1. Install `gws` CLI: see https://github.com/googleworkspace/cli
+2. Run `gws auth` to authenticate
+3. Verify with `gws gmail +triage` -- should show your unread inbox
+4. Set `personal_gmail_method: "gws"` in config.yaml
 
-If you have a work Gmail account:
+**Option C: Google Cloud OAuth (method: "fetch") -- for advanced users**
 1. Create a Google Cloud project at https://console.cloud.google.com/
 2. Enable the Gmail API
 3. Create OAuth 2.0 credentials (Desktop app type)
 4. Download the credentials JSON file and save it as `briefing-data/credentials.json`
-5. Run `cd briefing-data && python fetch_emails.py work your_work@gmail.com` -- this will open a browser for OAuth consent on first run
+5. Run `cd briefing-data && python fetch_emails.py work your_work@gmail.com` -- opens browser for OAuth consent on first run
 6. After authenticating, `token_work.json` is saved and auto-refreshes on future runs
-7. For personal Gmail too: `python fetch_emails.py personal your_personal@gmail.com` (same credentials.json, separate token)
+7. Set `work_gmail_method: "fetch"` in config.yaml
 
-If you don't have a work Gmail account, skip this step. The briefing will work without it.
+**Note:** `credentials.json` is tied to a specific Google Cloud project. Only accounts added as test users in that project can authenticate. If OAuth hangs or fails, use "gws" method for that account instead. The script has a 15-second timeout and will exit gracefully if authentication cannot complete.
 
 ### 6. Optional MCP servers
 

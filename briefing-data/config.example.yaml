@@ -9,6 +9,16 @@
 personal_gmail: your_personal_email@gmail.com
 work_gmail: your_work_email@gmail.com
 
+# Per-account email fetch method (optional, default: "auto")
+# Options:
+#   "auto"  -- try MCP -> fetch_emails.py -> gws CLI (stop at first success)
+#   "mcp"   -- MCP gmail_search_messages only (Claude Desktop with Gmail MCP)
+#   "fetch" -- python fetch_emails.py only (requires credentials.json + OAuth token)
+#   "gws"   -- gws gmail CLI only (requires gws CLI authenticated via `gws auth`)
+# Tip: use "gws" for accounts where credentials.json doesn't have access.
+personal_gmail_method: "auto"
+work_gmail_method: "auto"
+
 # Output path for the daily briefing (Obsidian vault recommended)
 # Leave empty to output in Cowork chat + save to output/ folder in this repo
 obsidian_vault_path: ""

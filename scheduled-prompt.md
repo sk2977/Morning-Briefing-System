@@ -14,6 +14,7 @@ On weekends, use wider search windows (past 72h for deals and macro).
 - `obsidian_vault_path` -- path to Obsidian vault (empty = use output/ folder + print in chat)
 - `priority_senders` -- comma-separated names/domains to flag as HIGH priority
 - `extra_skip_senders` -- additional senders to skip (beyond the built-in list)
+- `personal_gmail_method` / `work_gmail_method` -- email fetch method per account: "auto" (default), "mcp", "fetch", or "gws"
 - `tavily_available` -- set to false to use WebSearch instead of Tavily for deal/VC searches
 
 **State folder**: `briefing-data/` (relative to repo root)
@@ -35,7 +36,7 @@ On weekends, use wider search windows (past 72h for deals and macro).
 - If no fresh data for a section, write "No new developments in the past 48 hours."
 - Context blocks are REQUIRED for every deal, trial result, pipeline update, or strategic move.
 - Include source links: for every deal, news headline, clinical result, and VC round, append a markdown hyperlink to the source article -- e.g., `([FierceBiotech](https://url))`. Use the URLs returned by Tavily/WebSearch. Multiple sources per item are fine. This lets the reader click through for full coverage.
-- Use `[[wikilinks]]` for key entities throughout the briefing: company names (e.g. [[Gilead]], [[Sanofi]]), drug targets (e.g. [[EGFR]], [[PD-L1]]), modalities (e.g. [[ADC]], [[CAR-T]], [[bispecific antibody]]), indications/diseases (e.g. [[NSCLC]], [[multiple myeloma]], [[obesity]]), and key mechanisms (e.g. [[checkpoint inhibitor]], [[GLP-1 agonist]]). This builds a knowledge graph over time in Obsidian. Non-Obsidian users can ignore the brackets.
+- Use `[[wikilinks]]` for key entities throughout the briefing: company names (e.g. [[Gilead]], [[Sanofi]]), drug names (e.g. [[pembrolizumab]], [[semaglutide]], [[trastuzumab]]), drug targets (e.g. [[EGFR]], [[PD-L1]]), modalities (e.g. [[ADC]], [[CAR-T]], [[bispecific antibody]]), indications/diseases (e.g. [[NSCLC]], [[multiple myeloma]], [[obesity]]), and key mechanisms (e.g. [[checkpoint inhibitor]], [[GLP-1 agonist]]). This builds a knowledge graph over time in Obsidian. Non-Obsidian users can ignore the brackets.
 
 **Email classification rules**:
 
@@ -60,11 +61,14 @@ Execute tool calls in parallel where possible. Group by dependency phase:
 PHASE 1 -- Run these in parallel (no dependencies between them):
 - Bash: python fetch_macro.py
 - Email: For EACH configured account in config.yaml (personal_gmail -> label "personal", work_gmail -> label "work"),
-  try methods sequentially until one succeeds (the per-account fetching itself runs in parallel with other Phase 1 tasks):
-  1. MCP: gmail_search_messages query:"is:unread newer_than:1d" (works in Claude Desktop)
-  2. Bash: python fetch_emails.py <label> <email> (works anywhere with credentials.json)
-  3. Bash: gws gmail +triage (works with gws CLI auth -- shows unread inbox summary with sender, subject, date, id)
-  Skip any account where the config value is empty.
+  check `<label>_gmail_method` from config (default: "auto"). Skip any account where the email value is empty.
+  - If method is "mcp": use MCP gmail_search_messages only. If it fails, skip this account.
+  - If method is "fetch": run python fetch_emails.py only. If it doesn't return within 20 seconds, kill the process and skip.
+  - If method is "gws": use gws gmail +triage only. If it fails, skip this account.
+  - If method is "auto": try methods sequentially until one succeeds:
+    1. MCP: gmail_search_messages query:"is:unread newer_than:1d" (works in Claude Desktop)
+    2. Bash: python fetch_emails.py <label> <email> -- if it doesn't return within 20 seconds, kill and try step 3
+    3. Bash: gws gmail +triage (works with gws CLI auth -- shows unread inbox summary with sender, subject, date, id)
 - WebSearch: PDUFA + clinical readout queries (4)
 - WebSearch: AI Tech queries (2)
 - WebSearch: Top News queries (3)
@@ -91,17 +95,20 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Email ==
 
-**Tools (fallback chain -- try in order per account)**:
+**Tools (per-account method from config.yaml `<label>_gmail_method` -- "auto" tries all in order)**:
 1. MCP `gmail_search_messages` / `gmail_read_message` -- works in Claude Desktop with Gmail MCP
 2. `python fetch_emails.py <label> <email>` -- works anywhere with `credentials.json` in briefing-data/
 3. `gws gmail +triage` (list unread) / `gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full"}'` (read body) -- works with gws CLI auth
 
 **Instructions**:
 1. For each configured account (personal_gmail, work_gmail from config.yaml):
-   a. Try MCP: `gmail_search_messages` query:"is:unread newer_than:1d" -- if tool exists and succeeds, use results
-   b. If MCP unavailable or errors: run `python briefing-data/fetch_emails.py <label> <email>`, then read `<label>_emails.json`
-   c. If Python fails (no credentials.json): run `gws gmail +triage` to list unread emails (returns sender, subject, date, id in table format)
-   d. If all methods fail: skip this account, note "No email data for <label>"
+   Read `<label>_gmail_method` from config (default: "auto").
+   - If a specific method is set ("mcp", "fetch", or "gws"): use ONLY that method. If it fails, skip this account with note "No email data for <label>".
+   - If "auto": try fallback chain:
+     a. Try MCP: `gmail_search_messages` query:"is:unread newer_than:1d" -- if tool exists and succeeds, use results
+     b. If MCP unavailable or errors: run `python briefing-data/fetch_emails.py <label> <email>`. If it doesn't return within 20 seconds, kill the process and try step c.
+     c. If Python fails: run `gws gmail +triage` to list unread emails (returns sender, subject, date, id in table format)
+     d. If all methods fail: skip this account, note "No email data for <label>"
 2. For each email (all sources):
    a. Check sender against SKIP list -- if match, discard
    b. Check sender against NEWS list -- if match, extract headlines/deal mentions for Top News and Biopharma modules (do not discard)

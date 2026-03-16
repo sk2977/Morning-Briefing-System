@@ -18,6 +18,7 @@ import base64
 import json
 import os
 import sys
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -32,6 +33,7 @@ SCRIPT_DIR = Path(__file__).parent
 DEFAULT_MAX_RESULTS = 20
 FULL_BODY_COUNT = 5
 MAX_BODY_LENGTH = 2000
+OAUTH_TIMEOUT_SECONDS = 15
 
 load_dotenv(SCRIPT_DIR / ".env")
 CREDENTIALS_FILE = SCRIPT_DIR / "credentials.json"
@@ -96,7 +98,29 @@ def get_gmail_service(label):
             flow = InstalledAppFlow.from_client_secrets_file(
                 str(CREDENTIALS_FILE), SCOPES
             )
-            creds = flow.run_local_server(port=0)
+            # Timeout wrapper: prevents indefinite hang when credentials.json
+            # is from a project the account can't access.
+            oauth_result = [None]
+            oauth_error = [None]
+
+            def _run_oauth():
+                try:
+                    oauth_result[0] = flow.run_local_server(port=0)
+                except Exception as e:
+                    oauth_error[0] = e
+
+            t = threading.Thread(target=_run_oauth, daemon=True)
+            t.start()
+            t.join(timeout=OAUTH_TIMEOUT_SECONDS)
+            if t.is_alive():
+                raise TimeoutError(
+                    f"OAuth flow timed out after {OAUTH_TIMEOUT_SECONDS}s -- "
+                    "credentials.json may be from a project this account "
+                    "cannot access. Use gws method instead."
+                )
+            if oauth_error[0]:
+                raise oauth_error[0]
+            creds = oauth_result[0]
 
         with open(token_file, "w", encoding="utf-8") as f:
             f.write(creds.to_json())

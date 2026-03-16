@@ -53,7 +53,16 @@ gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full
 
 ## Gmail Fallback Chain
 
-Per-account, try in order: MCP `gmail_search_messages` (Claude Desktop) -> `python fetch_emails.py <label> <email>` (needs `credentials.json`) -> `gws gmail +triage` (needs gws auth). The Python script shares one `credentials.json` across accounts via per-account tokens (`token_<label>.json`).
+Per-account, configurable via `<label>_gmail_method` in config.yaml:
+- `"auto"` (default): try MCP `gmail_search_messages` -> `python fetch_emails.py` -> `gws gmail +triage`, stop at first success
+- `"mcp"` / `"fetch"` / `"gws"`: use only that method
+
+The Python script (`fetch_emails.py`) has a 15-second timeout on OAuth. If `credentials.json` is from a Cloud project the account can't access, the script exits gracefully with empty JSON instead of hanging. Per-account tokens stored as `token_<label>.json`.
+
+Setup requirements per method:
+- **MCP**: Gmail MCP configured in Claude Desktop
+- **fetch**: `credentials.json` in `briefing-data/` from a Google Cloud project where the account is authorized. First run opens browser for OAuth consent (saves `token_<label>.json`).
+- **gws**: `gws` CLI installed and authenticated (`gws auth`; verify with `gws gmail +triage`)
 
 ## State Files
 
@@ -88,3 +97,4 @@ The scheduled prompt relies on these MCP connections:
 - **yfinance rate limiting**: Market data (S&P 500, XBI, Russell 2000) frequently returns null. Use WebSearch as fallback for current market levels.
 - **PubMed MCP sessions**: Can terminate mid-run ("MCP session has been terminated"). If some queries fail, use prior run's data or skip.
 - **Tavily VC research**: `tavily_research` with `model: "auto"` over-verifies dates and often returns empty for current-week rounds. Use `model: "mini"` for actionable results.
+- **credentials.json is project-scoped**: The OAuth client in `credentials.json` is tied to a specific Google Cloud project. Accounts not added as test users in that project will fail at the OAuth screen. Set the account's method to `"gws"` in config.yaml, or add the account to the Cloud project's test users.
