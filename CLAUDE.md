@@ -97,7 +97,7 @@ The scheduled prompt relies on these MCP connections:
 - Context blocks required for every deal/trial/update in the briefing output
 - Only include data from past 48 hours; never backfill with training data
 - Tavily: 3 deal searches (search_depth: "advanced", time_range: "week", include_raw_content: false, max_results: 5) + 1 tavily_research (model: "mini") for VC (~4 calls/run, 7 credits). Discard any results with article dates older than 10 days (Tavily date filtering can leak old results).
-- Tavily param pitfalls: `days` and `topic: "news"` are NOT available in the current MCP schema (enum is ["general"] only). Use `time_range` instead of `start_date` for more reliable date filtering. Domain filter should exclude reuters.com (too much non-biopharma noise).
+- Tavily param pitfalls: `days` and `topic: "news"` are NOT available in the cloud MCP schema (enum is ["general"] only). `start_date`/`end_date` (YYYY-MM-DD) exist but are soft filters -- `time_range` is more reliable for date filtering. `search_depth` supports `"basic"`, `"advanced"`, `"fast"`, `"ultra-fast"`. `tavily_extract` supports a `query` param for relevance reranking. Domain filter should exclude reuters.com (too much non-biopharma noise).
 - WebSearch (free) handles PDUFA, clinical readouts, top news, AI updates, macro events, and macro fallback queries (~15-17 calls/run)
 - Briefing output is written as an Obsidian markdown note (or to output/ folder if no vault configured)
 
