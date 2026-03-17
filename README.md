@@ -1,6 +1,6 @@
 # Morning Briefing System
 
-Claude Desktop Cowork scheduled task that delivers a daily WSJ-style briefing at 6:00 AM ET. One prompt file, two Python helper scripts, one state folder. No framework, no server, no CI/CD.
+Claude Desktop Cowork scheduled task that delivers a daily WSJ-style briefing at 6:00 AM ET. One prompt file, three Python helper scripts, one state folder. No framework, no server, no CI/CD.
 
 ## What It Produces
 
@@ -24,9 +24,11 @@ briefing-data/
   config.example.yaml            -- Template with placeholders
   .env                           -- API keys (gitignored)
   .env.example                   -- Template for .env
-  fetch_macro.py                 -- FRED + yfinance helper (run by Cowork each morning)
+  fetch_macro.py                 -- FRED + Twelve Data / yfinance helper (run by Cowork each morning)
   fetch_emails.py                -- Gmail API helper (usage: python fetch_emails.py <label> <email>)
+  fetch_pubmed.py                -- NCBI E-utilities helper (publication volume trends)
   macro_latest.json              -- Written by fetch_macro.py each run (gitignored)
+  pubmed_latest.json             -- Written by fetch_pubmed.py each run (gitignored)
   *_emails.json                  -- Written by fetch_emails.py each run (gitignored)
   credentials.json               -- Google OAuth credentials (gitignored)
   token_*.json                   -- Per-account OAuth tokens (gitignored)
@@ -99,13 +101,13 @@ Note: Computer must be awake and Claude Desktop open at run time. If asleep, it 
 | Source | Tool | Data | Cost |
 |--------|------|------|------|
 | FRED API | fetch_macro.py | Fed Funds, 10Y, unemployment, CPI, oil | Free |
-| yfinance | fetch_macro.py | S&P 500, XBI, Russell 2000 | Free |
+| Twelve Data | fetch_macro.py | S&P 500, XBI, Russell 2000 (yfinance fallback) | Free (800 calls/day) |
+| NCBI E-utilities | fetch_pubmed.py | Publication volume trends (5 therapeutic areas) | Free |
 | Gmail | MCP -> fetch_emails.py -> gws CLI (fallback chain) | Email triage | Free |
 | WebSearch | scheduled prompt | PDUFA, AI news, macro fallback | Free |
-| Tavily MCP | scheduled prompt | Deal searches (3, advanced+raw_content), VC research (1) | ~4 calls/run, 7 credits |
-| PubMed MCP | scheduled prompt | Publication volume trends | Free |
-| ChEMBL MCP | scheduled prompt | Drug mechanism enrichment | Free |
-| Clinical Trials MCP | scheduled prompt | Trial status for catalysts | Free |
+| Tavily MCP | scheduled prompt | Deal searches (3, advanced), VC research (1) | ~4 calls/run, 7 credits |
+| ChEMBL MCP | scheduled prompt | Drug mechanism enrichment (optional) | Free |
+| Clinical Trials MCP | scheduled prompt | Trial status for catalysts (optional) | Free |
 
 ## Execution Order
 
@@ -118,7 +120,7 @@ The prompt uses a 3-phase dependency graph for parallel execution:
 ## Education Curriculum
 
 Rotating daily lessons on a 3-month curriculum:
-- Mon=MECHANISM, Tue=CLINICAL_DATA, Wed=COMPETITIVE, Thu=DEAL_ANGLE, Fri=SYNTHESIS
+- Day type derived from day-of-week: Mon=MECHANISM, Tue=CLINICAL_DATA, Wed=COMPETITIVE, Thu=DEAL_ANGLE, Fri=SYNTHESIS
 - Month 1: Drug Modalities (ADCs, Gene/Cell Therapy, RNA, Bispecifics)
 - Month 2: Deal Structuring & Valuation
 - Month 3: Regulatory Science & Market Access

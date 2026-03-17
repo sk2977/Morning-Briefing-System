@@ -86,11 +86,32 @@ def get_gmail_service(label):
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             print("[INFO] Refreshing expired token...")
-            try:
-                creds.refresh(Request())
-            except Exception as e:
-                print(f"[WARNING] Token refresh failed ({e}), re-authenticating...")
+            import time as _time
+            _start = _time.time()
+            refresh_error = [None]
+
+            def _do_refresh():
+                try:
+                    creds.refresh(Request())
+                except Exception as e:
+                    refresh_error[0] = e
+
+            t = threading.Thread(target=_do_refresh, daemon=True)
+            t.start()
+            t.join(timeout=10)
+            _elapsed = _time.time() - _start
+
+            if t.is_alive():
+                print(f"[WARNING] Token refresh timed out after {_elapsed:.1f}s")
                 creds = None
+            elif refresh_error[0]:
+                print(f"[WARNING] Token refresh failed after {_elapsed:.1f}s ({type(refresh_error[0]).__name__}: {refresh_error[0]})")
+                creds = None
+            else:
+                print(f"[OK] Token refreshed in {_elapsed:.1f}s")
+                with open(token_file, "w", encoding="utf-8") as f:
+                    f.write(creds.to_json())
+                print(f"[OK] Token saved to {token_file.name}")
         if not creds or not creds.valid:
             if not CREDENTIALS_FILE.exists():
                 raise FileNotFoundError(f"{CREDENTIALS_FILE} not found")

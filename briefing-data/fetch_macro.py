@@ -83,9 +83,75 @@ def fetch_fred_series(series_id: str, frequency: str = "monthly") -> dict:
 
 MARKET_NULL_RESULT = {"price": None, "daily_change_pct": None, "ytd_change_pct": None}
 
+# Twelve Data API (free tier: 800 calls/day) -- preferred over yfinance
+TWELVE_DATA_API_KEY = os.environ.get("TWELVE_DATA_API_KEY", "")
+TWELVE_DATA_QUOTE_URL = "https://api.twelvedata.com/quote"
+TWELVE_DATA_TS_URL = "https://api.twelvedata.com/time_series"
 
-def fetch_market_data() -> dict:
-    """Fetch market index data via yfinance batch download."""
+# Twelve Data uses different ticker symbols than yfinance
+TWELVE_DATA_TICKERS = {
+    "sp500": "SPX",
+    "xbi": "XBI",
+    "russell2000": "RUT",
+}
+
+
+def fetch_market_data_twelvedata() -> dict:
+    """Fetch market data via Twelve Data API (preferred)."""
+    results = {}
+    year_start = f"{datetime.now().year}-01-02"
+
+    for name, ticker in TWELVE_DATA_TICKERS.items():
+        try:
+            # Get current quote (price + daily change)
+            quote_resp = requests.get(TWELVE_DATA_QUOTE_URL, params={
+                "symbol": ticker,
+                "apikey": TWELVE_DATA_API_KEY,
+            }, timeout=10)
+            quote_resp.raise_for_status()
+            quote = quote_resp.json()
+
+            if quote.get("code") or quote.get("status") == "error":
+                print(f"[WARNING] Twelve Data {ticker}: {quote.get('message', 'error')}", file=sys.stderr)
+                results[name] = dict(MARKET_NULL_RESULT)
+                continue
+
+            price = float(quote.get("close", 0))
+            daily_change = float(quote.get("percent_change", 0))
+
+            # Get Jan 2 close for YTD calculation
+            ts_resp = requests.get(TWELVE_DATA_TS_URL, params={
+                "symbol": ticker,
+                "interval": "1day",
+                "start_date": year_start,
+                "outputsize": 1,
+                "apikey": TWELVE_DATA_API_KEY,
+            }, timeout=10)
+            ts_resp.raise_for_status()
+            ts = ts_resp.json()
+
+            ytd_change = None
+            values = ts.get("values", [])
+            if values:
+                jan_close = float(values[-1].get("close", 0))
+                if jan_close > 0:
+                    ytd_change = round(((price - jan_close) / jan_close) * 100, 2)
+
+            results[name] = {
+                "price": round(price, 2),
+                "daily_change_pct": round(daily_change, 2),
+                "ytd_change_pct": ytd_change,
+                "source": "twelvedata",
+            }
+        except Exception as e:
+            print(f"[ERROR] Twelve Data {ticker}: {e}", file=sys.stderr)
+            results[name] = dict(MARKET_NULL_RESULT)
+
+    return results
+
+
+def fetch_market_data_yfinance() -> dict:
+    """Fetch market index data via yfinance batch download (fallback)."""
     results = {}
     tickers_list = list(MARKET_TICKERS.values())
 
@@ -119,6 +185,7 @@ def fetch_market_data() -> dict:
                     "price": round(latest_close, 2),
                     "daily_change_pct": daily_change,
                     "ytd_change_pct": ytd_change,
+                    "source": "yfinance",
                 }
             except Exception as e:
                 print(f"[ERROR] yfinance {ticker}: {e}", file=sys.stderr)
@@ -130,6 +197,20 @@ def fetch_market_data() -> dict:
             results[name] = dict(MARKET_NULL_RESULT)
 
     return results
+
+
+def fetch_market_data() -> dict:
+    """Fetch market data. Tries Twelve Data first, falls back to yfinance."""
+    if TWELVE_DATA_API_KEY:
+        print("[INFO] Trying Twelve Data API...")
+        results = fetch_market_data_twelvedata()
+        # Check if we got at least one valid result
+        if any(r["price"] is not None for r in results.values()):
+            return results
+        print("[WARNING] Twelve Data returned no data, falling back to yfinance...")
+
+    print("[INFO] Using yfinance...")
+    return fetch_market_data_yfinance()
 
 
 def main():

@@ -32,10 +32,11 @@ Claude will read this file and guide you through each step interactively, asking
 - Higher-quality deal searches with domain filtering and full article content
 - VC funding round research with structured output
 
-**+ PubMed, ChEMBL, Clinical Trials MCP servers (free):**
-- Publication volume trends by therapeutic area (PubMed)
+**+ ChEMBL, Clinical Trials MCP servers (free):**
 - Drug mechanism enrichment in education lessons (ChEMBL)
 - Trial detail lookups for regulatory catalysts (Clinical Trials)
+
+Note: PubMed publication trends are included in the free tier via `fetch_pubmed.py` (no MCP needed).
 
 **+ Work Gmail via Google Cloud OAuth (free, more setup):**
 - Second email account triage (e.g., work inbox alongside personal)
@@ -80,6 +81,8 @@ Edit `config.yaml` and fill in:
 Edit `briefing-data/.env` and fill in:
 
 - **FRED_API_KEY**: Free API key from https://fred.stlouisfed.org/docs/api/api_key.html (takes 30 seconds to register)
+- **TWELVE_DATA_API_KEY** (optional): Free API key from https://twelvedata.com/pricing (800 calls/day). Provides reliable market data for S&P 500, XBI, Russell 2000. Without it, falls back to yfinance (often rate-limited).
+- **NCBI_API_KEY** (optional): Free from https://www.ncbi.nlm.nih.gov/account/. Increases PubMed rate limit from 3/sec to 10/sec. Works without it.
 - **WORK_GMAIL_ADDRESS**: Same as work_gmail in config.yaml (used by the Python script, optional)
 
 ### 4. Gmail setup (choose one method per account)
@@ -107,23 +110,25 @@ There are three ways to fetch email. Pick one per account and set `<label>_gmail
 6. After authenticating, `token_work.json` is saved and auto-refreshes on future runs
 7. Set `work_gmail_method: "fetch"` in config.yaml
 
-**Note:** `credentials.json` is tied to a specific Google Cloud project. Only accounts added as test users in that project can authenticate. If OAuth hangs or fails, use "gws" method for that account instead. The script has a 15-second timeout and will exit gracefully if authentication cannot complete.
+**Note:** `credentials.json` is tied to a specific Google Cloud project. Only accounts added as test users in that project can authenticate. If OAuth hangs or fails, use "gws" method for that account instead. The script has a 10-second timeout on token refresh and a 15-second timeout on OAuth, and will exit gracefully if authentication cannot complete.
 
 ### 6. Optional MCP servers
 
 These MCP servers enhance the briefing but are not required:
 - **Tavily** -- Improves deal search quality. Without it, set `tavily_available: false` in config.yaml and WebSearch (free, built-in) handles everything.
-- **PubMed** -- Publication volume trends in the education module
 - **ChEMBL** -- Drug mechanism enrichment in the education module
 - **Clinical Trials** -- Trial status lookups for catalyst tracking
+
+Note: PubMed is no longer an MCP dependency. Publication volume data is fetched directly via `fetch_pubmed.py` (NCBI E-utilities API).
 
 ### 7. Test the setup
 
 ```bash
 cd briefing-data && python fetch_macro.py
+cd briefing-data && python fetch_pubmed.py
 ```
 
-If you see `[OK] Wrote macro_latest.json` with market data, your FRED key and Python environment are working.
+If you see `[OK] Wrote macro_latest.json` and `[OK] Wrote pubmed_latest.json`, your API keys and Python environment are working.
 
 ### 8. Create the Scheduled Task
 

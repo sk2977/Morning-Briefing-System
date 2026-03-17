@@ -63,19 +63,19 @@ PHASE 1 -- Run these in parallel (no dependencies between them):
 - Email: For EACH configured account in config.yaml (personal_gmail -> label "personal", work_gmail -> label "work"),
   check `<label>_gmail_method` from config (default: "auto"). Skip any account where the email value is empty.
   - If method is "mcp": use MCP gmail_search_messages only. If it fails, skip this account.
-  - If method is "fetch": run python fetch_emails.py only. If it doesn't return within 20 seconds, kill the process and skip.
+  - If method is "fetch": run python fetch_emails.py only. If it doesn't return within 30 seconds, kill the process and skip.
   - If method is "gws": use gws gmail +triage only. If it fails, skip this account.
   - If method is "auto": try methods sequentially until one succeeds:
     1. MCP: gmail_search_messages query:"is:unread newer_than:1d" (works in Claude Desktop)
-    2. Bash: python fetch_emails.py <label> <email> -- if it doesn't return within 20 seconds, kill and try step 3
+    2. Bash: python fetch_emails.py <label> <email> -- if it doesn't return within 30 seconds, kill and try step 3
     3. Bash: gws gmail +triage (works with gws CLI auth -- shows unread inbox summary with sender, subject, date, id)
 - WebSearch: PDUFA + clinical readout queries (4)
 - WebSearch: AI Tech queries (2)
 - WebSearch: Top News queries (3)
 - WebSearch: Macro event queries (3)
-- tavily_search: Deal queries (3, with domain filters, days: 3) -- or WebSearch if tavily_available is false
+- tavily_search: Deal queries (3, with domain filters, time_range: week) -- or WebSearch if tavily_available is false
 - tavily_research: VC query (1, time_range: week) -- or WebSearch if tavily_available is false
-- search_articles: PubMed queries (5) -- skip if PubMed MCP unavailable
+- Bash: python fetch_pubmed.py (publication volume counts for 5 therapeutic areas)
 
 PHASE 2 -- After Phase 1 results return:
 - For each account where email data was obtained:
@@ -84,7 +84,7 @@ PHASE 2 -- After Phase 1 results return:
   - If via gws CLI: run gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full"}' --format json for top 5 actionable emails
 - search_trials for any PDUFA/catalyst hits -- skip if Clinical Trials MCP unavailable
 - drug_search / get_mechanism for education enrichment -- skip if ChEMBL MCP unavailable
-- Read macro_latest.json + curriculum_state.json
+- Read macro_latest.json + curriculum_state.json + pubmed_latest.json
 
 PHASE 3 -- After Phase 2:
 - SYNTHESIZE into final briefing
@@ -130,13 +130,13 @@ PHASE 3 -- After Phase 2:
 
 **Tools**: `tavily_search` (3 queries). If `tavily_available` is false in config.yaml, use `WebSearch` instead (same queries, append "site:fiercebiotech.com OR site:endpts.com OR site:statnews.com" to each).
 **Instructions**:
-1. Compute start_date as 7 days before today in YYYY-MM-DD format (matches "past 7 days" deal flow window).
-2. Run these 3 searches in parallel (topic: "news", search_depth: "advanced", include_raw_content: true, max_results: 7, start_date: <computed>, include_domains: [fiercebiotech.com, endpts.com, statnews.com, biopharmadive.com]):
+1. Run these 3 searches in parallel (topic: "news", time_range: "week", search_depth: "advanced", include_raw_content: false, max_results: 5, include_domains: [fiercebiotech.com, endpts.com, statnews.com, biopharmadive.com], exclude_domains: [reuters.com]):
    - "biopharma acquisition M&A merger deal 2026"
    - "pharma biotech licensing agreement partnership collaboration 2026"
    - "drug deal milestone upfront payment announced 2026"
-3. Deduplicate by company names
-4. Full article content is already in raw_content from search results -- no separate tavily_extract step needed.
+   Note: If `topic: "news"` is not accepted by the MCP server, use `topic: "general"` with `time_range: "week"` instead.
+2. Deduplicate by company names
+3. Discard any results where the article publication date is older than 10 days (Tavily date filtering can leak old results).
 5. For each deal, extract: acquirer, target, drug_name, modality, therapeutic_area, disease, stage, upfront_m, milestone_m, total_m, region, strategic_rationale
 6. Append new deals to `deals_log.csv` (check date + acquirer + target to avoid duplicates)
 7. Build context block for EVERY deal:
@@ -224,16 +224,17 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Science ==
 
-**Tool**: `search_articles` (PubMed MCP, optional -- skip this module if PubMed MCP is unavailable)
+**Tool**: Read `briefing-data/pubmed_latest.json` (pre-fetched by `fetch_pubmed.py` in Phase 1)
 **Instructions**:
-1. Search 5 therapeutic areas for publication volume signals:
-   - "antibody drug conjugate" (past 30 days)
-   - "GLP-1 obesity" (past 30 days)
-   - "CAR-T cell therapy" (past 30 days)
-   - "CRISPR gene editing therapeutic" (past 30 days)
-   - "bispecific antibody cancer" (past 30 days)
+1. Read `briefing-data/pubmed_latest.json` which contains publication counts and top articles for 5 therapeutic areas (past 30 days):
+   - antibody drug conjugate (adc)
+   - GLP-1 obesity (glp1_obesity)
+   - CAR-T cell therapy (car_t)
+   - CRISPR gene editing therapeutic (crispr)
+   - bispecific antibody cancer (bispecific)
 2. Compare result counts to identify trending areas
-3. Note any high-impact publications (Nature, NEJM, Lancet, Cell)
+3. Note any articles flagged as `high_impact: true` (Nature, NEJM, Lancet, Cell, Science, JAMA)
+4. If pubmed_latest.json is missing or has null counts, skip this module
 
 **Output**: Feeds into Therapeutic Area Signals subsection
 
@@ -245,22 +246,44 @@ PHASE 3 -- After Phase 2:
 **Instructions**:
 1. Read `briefing-data/curriculum_state.json`
 2. Determine today's lesson:
-   - Day-of-week rotation: Mon=MECHANISM, Tue=CLINICAL_DATA, Wed=COMPETITIVE, Thu=DEAL_ANGLE, Fri=SYNTHESIS, Weekend=SYNTHESIS
-   - Current week/topic from state file
-   - Pick next uncovered subtopic for the current week
-   - NEWS OVERRIDE: If the day's top deal or clinical readout directly involves a different modality/mechanism, teach THAT mechanism instead using the same day-type lens. Example: if today is COMPETITIVE day on "Bispecifics" but the top deal is a CAR-T acquisition, teach competitive positioning of CAR-T vs bispecifics. Log the override topic in curriculum_state.json as a bonus lesson (do not advance the week counter).
+
+   a. **Derive day_type from actual day-of-week** (not a counter):
+      - Mon=MECHANISM, Tue=CLINICAL_DATA, Wed=COMPETITIVE, Thu=DEAL_ANGLE, Fri=SYNTHESIS
+      - Weekend (Sat/Sun)=SYNTHESIS
+      - Store as `today_day_type`
+
+   b. **Detect week boundary**:
+      - Read `current_week_start_date` from state (Monday of current week, YYYY-MM-DD)
+      - Compute Monday of this calendar week (ISO week)
+      - If today's Monday != `current_week_start_date`: the week has advanced
+        - Reset `subtopics_covered_this_week` to empty list
+        - Update `current_week_start_date` to this Monday
+        - Increment `current_week`
+        - If `current_week` > 4: advance to next month theme, reset `current_week` to 1
+      - If `current_week_start_date` is missing (first run of new format):
+        compute it from the most recent lesson date in `lessons_completed`,
+        and build `subtopics_covered_this_week` from lessons in the current calendar week
+
+   c. **Select subtopic**:
+      - Get this week's subtopic list from the curriculum schema
+      - Filter out subtopics already in `subtopics_covered_this_week`
+      - Pick the next uncovered subtopic in the list order
+      - If all subtopics are covered: pick a synthesis/review subtopic
+
+   d. **NEWS OVERRIDE**: If the day's top deal or clinical readout directly involves a different modality/mechanism, teach THAT mechanism using the day_type lens. Log as an override in lessons_completed but do NOT add the subtopic to `subtopics_covered_this_week` (override lessons don't consume weekly subtopic slots).
+
 3. Write 400-600 word lesson covering:
    - Core mechanism or concept
    - Real clinical data or case study (if ChEMBL MCP is available, use `drug_search` or `get_mechanism` to enrich with real drug data; otherwise use WebSearch)
    - Competitive landscape context
    - Investment / deal implications
    - Key takeaway for pattern recognition
-4. Add connections to prior 1-2 weeks' topics
+4. Add connections to prior 1-2 weeks' topics (scan `lessons_completed` for Week N-1 and N-2)
 5. After generating, update `curriculum_state.json`:
-   - Increment current_day
-   - Add entry to lessons_completed
-   - If week complete (5 weekday lessons), advance to next week
-   - If month complete (4 weeks), advance to next month
+   - Add entry to `lessons_completed` with: date, day_type, topic, subtopic_covered
+   - If not an override: add subtopic to `subtopics_covered_this_week`
+   - Increment `total_lessons_completed`
+   - Do NOT manually increment `current_week` here (week advancement happens in step 2b on Monday)
 
 **Output**: COMPOUNDING EDUCATION section
 
