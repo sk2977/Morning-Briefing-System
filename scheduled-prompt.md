@@ -58,24 +58,30 @@ action required, action needed, approval needed, please approve, please review, 
 
 Execute tool calls in parallel where possible. Group by dependency phase:
 
-PHASE 1 -- Run these in parallel (no dependencies between them):
+PHASE 1A -- Email & Python scripts (run as one parallel batch, isolated from search calls):
 - Bash: python fetch_macro.py
+- Bash: python fetch_pubmed.py
 - Email: For EACH configured account in config.yaml (personal_gmail -> label "personal", work_gmail -> label "work"),
   check `<label>_gmail_method` from config (default: "auto"). Skip any account where the email value is empty.
   - If method is "mcp": use MCP gmail_search_messages only. If it fails, skip this account.
-  - If method is "fetch": run python fetch_emails.py only. If it doesn't return within 30 seconds, kill the process and skip.
+  - If method is "fetch": run python fetch_emails.py only.
   - If method is "gws": use gws gmail +triage only. If it fails, skip this account.
   - If method is "auto": try methods sequentially until one succeeds:
     1. MCP: gmail_search_messages query:"is:unread newer_than:1d" (works in Claude Desktop)
-    2. Bash: python fetch_emails.py <label> <email> -- if it doesn't return within 30 seconds, kill and try step 3
+    2. Bash: python fetch_emails.py <label> <email> -- the script handles its own timeouts and will write empty JSON on failure
     3. Bash: gws gmail +triage (works with gws CLI auth -- shows unread inbox summary with sender, subject, date, id)
+
+PHASE 1B -- Search calls (run in parallel AFTER Phase 1A, or simultaneously if the platform supports independent batches):
 - WebSearch: PDUFA + clinical readout queries (4)
 - WebSearch: AI Tech queries (2)
 - WebSearch: Top News queries (3)
 - WebSearch: Macro event queries (3)
 - tavily_search: Deal queries (3, with domain filters, time_range: week) -- or WebSearch if tavily_available is false
 - tavily_research: VC query (1, time_range: week) -- or WebSearch if tavily_available is false
-- Bash: python fetch_pubmed.py (publication volume counts for 5 therapeutic areas)
+
+NOTE: Phase 1A and 1B have no data dependencies and CAN run at the same time, but they
+MUST be in separate parallel tool-call batches. This prevents a Bash timeout/failure in 1A
+from cancelling the WebSearch/Tavily calls in 1B.
 
 PHASE 2 -- After Phase 1 results return:
 - For each account where email data was obtained:
@@ -83,7 +89,7 @@ PHASE 2 -- After Phase 1 results return:
   - If via Python script: read <label>_emails.json (top 5 already have bodies)
   - If via gws CLI: run gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full"}' --format json for top 5 actionable emails
 - search_trials for any PDUFA/catalyst hits -- skip if Clinical Trials MCP unavailable
-- drug_search / get_mechanism for education enrichment -- skip if ChEMBL MCP unavailable
+- compound_search (by drug name) then get_mechanism (by molecule_chembl_id) for education enrichment -- skip if ChEMBL MCP unavailable
 - Read macro_latest.json + curriculum_state.json + pubmed_latest.json
 
 PHASE 3 -- After Phase 2:
@@ -242,7 +248,7 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Education ==
 
-**Tools**: Read `curriculum_state.json`, `drug_search` / `get_mechanism` (ChEMBL MCP, optional)
+**Tools**: Read `curriculum_state.json`, ChEMBL MCP (optional: `compound_search` by drug name first, then `get_mechanism` with the returned `molecule_chembl_id`)
 **Instructions**:
 1. Read `briefing-data/curriculum_state.json`
 2. Determine today's lesson:
@@ -274,7 +280,7 @@ PHASE 3 -- After Phase 2:
 
 3. Write 400-600 word lesson covering:
    - Core mechanism or concept
-   - Real clinical data or case study (if ChEMBL MCP is available, use `drug_search` or `get_mechanism` to enrich with real drug data; otherwise use WebSearch)
+   - Real clinical data or case study (if ChEMBL MCP is available, use `compound_search` to find the drug by name, then `get_mechanism` with the returned `molecule_chembl_id` to get mechanism of action data; otherwise use WebSearch)
    - Competitive landscape context
    - Investment / deal implications
    - Key takeaway for pattern recognition

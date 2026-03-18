@@ -102,8 +102,8 @@ def get_gmail_service(label):
             _elapsed = _time.time() - _start
 
             if t.is_alive():
-                print(f"[WARNING] Token refresh timed out after {_elapsed:.1f}s")
-                creds = None
+                print(f"[WARNING] Token refresh timed out after {_elapsed:.1f}s -- exiting gracefully")
+                return None
             elif refresh_error[0]:
                 print(f"[WARNING] Token refresh failed after {_elapsed:.1f}s ({type(refresh_error[0]).__name__}: {refresh_error[0]})")
                 creds = None
@@ -257,6 +257,11 @@ def main():
     except Exception as e:
         out = _write_output(label, email, [], note=f"Gmail auth failed ({e}) -- skipping email fetch")
         print(f"[WARNING] Gmail auth failed -- wrote empty {out.name}")
+        return
+
+    if service is None:
+        out = _write_output(label, email, [], note="Token refresh timed out -- skipping email fetch")
+        print(f"[WARNING] Auth returned None -- wrote empty {out.name}")
         return
 
     emails = fetch_emails(service)
