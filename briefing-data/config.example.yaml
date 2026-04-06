@@ -1,23 +1,21 @@
 # Copy this file to config.yaml and fill in your values.
 # config.yaml is gitignored -- your personal settings stay local.
 
-# Gmail accounts -- email fetching uses a fallback chain per account:
-#   1. MCP gmail_search_messages (Claude Desktop with Gmail MCP)
-#   2. python fetch_emails.py (requires credentials.json from Google Cloud Console)
-#   3. gws gmail CLI (requires gws auth setup)
-# Leave empty to skip an account entirely.
-personal_gmail: your_personal_email@gmail.com
-work_gmail: your_work_email@gmail.com
+# Email accounts -- leave empty to skip an account entirely.
+# Both accounts support any backend (Gmail or Microsoft 365).
+personal_email: your_personal_email@gmail.com
+work_email: your_work_email@domain.com
 
 # Per-account email fetch method (optional, default: "auto")
-# Options:
-#   "auto"  -- try MCP -> fetch_emails.py -> gws CLI (stop at first success)
+# Options for both accounts:
+#   "auto"  -- try MCP -> fetch_emails.py -> gws CLI (stop at first success; Gmail only)
+#   "m365"  -- Microsoft 365 Graph API via m365 CLI (requires m365 CLI setup)
 #   "mcp"   -- MCP gmail_search_messages only (Claude Desktop with Gmail MCP)
-#   "fetch" -- python fetch_emails.py only (requires credentials.json + OAuth token)
-#   "gws"   -- gws gmail CLI only (requires gws CLI authenticated via `gws auth`)
-# Tip: use "gws" for accounts where credentials.json doesn't have access.
-personal_gmail_method: "auto"
-work_gmail_method: "auto"
+#   "fetch" -- python fetch_emails.py only (requires credentials.json + OAuth token; Gmail only)
+#   "gws"   -- gws gmail CLI only (requires gws CLI authenticated via `gws auth`; Gmail only)
+# Tip: use "m365" for Outlook/Office 365 accounts, "auto" or "gws" for Gmail accounts.
+personal_email_method: "auto"
+work_email_method: "m365"
 
 # Output path for the daily briefing (Obsidian vault recommended)
 # Leave empty to output in Cowork chat + save to output/ folder in this repo

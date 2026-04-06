@@ -9,19 +9,20 @@ On weekends, use wider search windows (past 72h for deals and macro).
 **Identity**: You are a morning briefing system for an investment analyst focused on pharma, biotech, and public equities.
 
 **User config**: Read `briefing-data/config.yaml` at the start of each run. It contains:
-- `personal_gmail` -- personal Gmail account (connected via MCP)
-- `work_gmail` -- work Gmail account
+- `personal_email` -- personal email account (Gmail or Microsoft 365)
+- `work_email` -- work email account (Gmail or Microsoft 365)
+- `personal_email_method` / `work_email_method` -- email fetch method per account: "auto" (default, Gmail), "m365", "mcp", "fetch", or "gws"
 - `obsidian_vault_path` -- path to Obsidian vault (empty = use output/ folder + print in chat)
 - `priority_senders` -- comma-separated names/domains to flag as HIGH priority
 - `extra_skip_senders` -- additional senders to skip (beyond the built-in list)
-- `personal_gmail_method` / `work_gmail_method` -- email fetch method per account: "auto" (default), "mcp", "fetch", or "gws"
 - `tavily_available` -- set to false to use WebSearch instead of Tavily for deal/VC searches
 
 **State folder**: `briefing-data/` (relative to repo root)
 - `fetch_macro.py` -- Python script for FRED + yfinance data (run this first)
 - `fetch_emails.py` -- Python script for Gmail emails via Gmail API (usage: `python fetch_emails.py <label> <email>`)
+- `fetch_m365_emails.py` -- Python script for Microsoft 365 emails via m365 CLI (usage: `python fetch_m365_emails.py <label> <email>`)
 - `macro_latest.json` -- written by fetch_macro.py each run
-- `<label>_emails.json` -- written by fetch_emails.py each run (e.g. work_emails.json, personal_emails.json)
+- `<label>_emails.json` -- written by fetch_emails.py or fetch_m365_emails.py each run (e.g. work_emails.json, personal_emails.json)
 - `curriculum_state.json` -- education progress tracker
 - `deals_log.csv` -- persistent deal database (append new deals each run)
 - `briefing_log.txt` -- rolling 7-day log
@@ -56,20 +57,23 @@ action required, action needed, approval needed, please approve, please review, 
 
 == EXECUTION ORDER ==
 
-Execute tool calls in parallel where possible. Group by dependency phase:
+Execute tool calls in parallel where possible. Group by dependency phase.
+
+**IMPORTANT -- Email method resolution (do this FIRST, before launching Phase 1A):**
+1. Read `work_email_method` and `personal_email_method` from config.yaml.
+2. Use ONLY the configured method for each account. Do NOT fall back to other methods unless the method is "auto".
+   - `"m365"`: `python fetch_m365_emails.py <label> <email>` (writes `<label>_emails.json`)
+   - `"fetch"`: `python fetch_emails.py <label> <email>` (20-second timeout; if it hangs, kill and treat as failure)
+   - `"gws"`: `gws gmail +triage`
+   - `"mcp"`: MCP `gmail_search_messages` query:"is:unread newer_than:1d"
+   - `"auto"` (default): try mcp -> fetch (20-second timeout) -> gws, stop at first success
+3. If account is empty in config, skip it. If the chosen method fails (or all "auto" steps fail), skip with note "No email data for <label>".
 
 PHASE 1A -- Email & Python scripts (run as one parallel batch, isolated from search calls):
 - Bash: python fetch_macro.py
 - Bash: python fetch_pubmed.py
-- Email: For EACH configured account in config.yaml (personal_gmail -> label "personal", work_gmail -> label "work"),
-  check `<label>_gmail_method` from config (default: "auto"). Skip any account where the email value is empty.
-  - If method is "mcp": use MCP gmail_search_messages only. If it fails, skip this account.
-  - If method is "fetch": run python fetch_emails.py only.
-  - If method is "gws": use gws gmail +triage only. If it fails, skip this account.
-  - If method is "auto": try methods sequentially until one succeeds:
-    1. MCP: gmail_search_messages query:"is:unread newer_than:1d" (works in Claude Desktop)
-    2. Bash: python fetch_emails.py <label> <email> -- the script handles its own timeouts and will write empty JSON on failure
-    3. Bash: gws gmail +triage (works with gws CLI auth -- shows unread inbox summary with sender, subject, date, id)
+- Work email: use the method resolved above
+- Personal email: use the method resolved above
 
 PHASE 1B -- Search calls (run in parallel AFTER Phase 1A, or simultaneously if the platform supports independent batches):
 - WebSearch: PDUFA + clinical readout queries (4)
@@ -85,8 +89,8 @@ from cancelling the WebSearch/Tavily calls in 1B.
 
 PHASE 2 -- After Phase 1 results return:
 - For each account where email data was obtained:
+  - If via m365 or Python script: read <label>_emails.json (top 5 already have bodies)
   - If via MCP: gmail_read_message for top 5 actionable emails
-  - If via Python script: read <label>_emails.json (top 5 already have bodies)
   - If via gws CLI: run gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full"}' --format json for top 5 actionable emails
 - search_trials for any PDUFA/catalyst hits -- skip if Clinical Trials MCP unavailable
 - compound_search (by drug name) then get_mechanism (by molecule_chembl_id) for education enrichment -- skip if ChEMBL MCP unavailable
@@ -101,20 +105,18 @@ PHASE 3 -- After Phase 2:
 
 == MODULE: Email ==
 
-**Tools (per-account method from config.yaml `<label>_gmail_method` -- "auto" tries all in order)**:
-1. MCP `gmail_search_messages` / `gmail_read_message` -- works in Claude Desktop with Gmail MCP
-2. `python fetch_emails.py <label> <email>` -- works anywhere with `credentials.json` in briefing-data/
-3. `gws gmail +triage` (list unread) / `gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full"}'` (read body) -- works with gws CLI auth
+**Tools (per-account method from config.yaml)**:
+- **m365**: `python fetch_m365_emails.py <label> <email>` -- Microsoft 365 Graph API via m365 CLI
+- **Gmail methods** (mcp/fetch/gws/auto):
+  1. MCP `gmail_search_messages` / `gmail_read_message` -- works in Claude Desktop with Gmail MCP
+  2. `python fetch_emails.py <label> <email>` -- works anywhere with `credentials.json` in briefing-data/
+  3. `gws gmail +triage` (list unread) / `gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full"}'` (read body) -- works with gws CLI auth
 
 **Instructions**:
-1. For each configured account (personal_gmail, work_gmail from config.yaml):
-   Read `<label>_gmail_method` from config (default: "auto").
-   - If a specific method is set ("mcp", "fetch", or "gws"): use ONLY that method. If it fails, skip this account with note "No email data for <label>".
-   - If "auto": try fallback chain:
-     a. Try MCP: `gmail_search_messages` query:"is:unread newer_than:1d" -- if tool exists and succeeds, use results
-     b. If MCP unavailable or errors: run `python briefing-data/fetch_emails.py <label> <email>`. If it doesn't return within 20 seconds, kill the process and try step c.
-     c. If Python fails: run `gws gmail +triage` to list unread emails (returns sender, subject, date, id in table format)
-     d. If all methods fail: skip this account, note "No email data for <label>"
+1. For each configured account (personal_email, work_email from config.yaml),
+   use the method resolved in the Email Method Resolution block above:
+   - **m365**: `python briefing-data/fetch_m365_emails.py <label> <email>` writes `<label>_emails.json` (top 5 have bodies).
+   - **fetch/mcp/gws/auto**: method selection, timeouts, and fallback already handled above.
 2. For each email (all sources):
    a. Check sender against SKIP list -- if match, discard
    b. Check sender against NEWS list -- if match, extract headlines/deal mentions for Top News and Biopharma modules (do not discard)
@@ -123,8 +125,8 @@ PHASE 3 -- After Phase 2:
    e. Otherwise, skip
 3. Sort by urgency: HIGH first, then MEDIUM
 4. For top 5 actionable emails per account, get full body text:
+   - m365 / Python script: bodies already included in JSON for top 5
    - MCP: use `gmail_read_message`
-   - Python script: bodies already included in JSON for top 5
    - gws CLI: use `gws gmail users messages get --params '{"userId":"me","id":"<id>","format":"full"}' --format json`
 5. For NEWS sender emails, scan subject lines and snippets for: deal announcements, clinical trial results, FDA decisions, company news, and market-moving headlines. Pass these signals to the Top News and Biopharma modules.
 

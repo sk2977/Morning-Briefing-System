@@ -64,13 +64,14 @@ cp briefing-data/deals_log.example.csv briefing-data/deals_log.csv
 
 Edit `config.yaml` and fill in:
 
-- **personal_gmail**: Your personal Gmail address (leave blank to skip)
-- **work_gmail**: Your work Gmail address (optional -- leave blank to skip)
-- **personal_gmail_method** / **work_gmail_method**: How to fetch email for each account (optional, default: `"auto"`):
-  - `"auto"` -- try MCP -> fetch_emails.py -> gws CLI, stop at first success
+- **personal_email**: Your personal email address (Gmail or Microsoft 365 -- leave blank to skip)
+- **work_email**: Your work email address (Gmail or Microsoft 365 -- leave blank to skip)
+- **personal_email_method** / **work_email_method**: How to fetch email for each account (optional, default: `"auto"`):
+  - `"auto"` -- try MCP -> fetch_emails.py -> gws CLI, stop at first success (Gmail only)
+  - `"m365"` -- Microsoft 365 Graph API via m365 CLI
   - `"mcp"` -- Gmail MCP server only (Claude Desktop)
-  - `"fetch"` -- `fetch_emails.py` only (requires `credentials.json` from Google Cloud Console)
-  - `"gws"` -- `gws` CLI only (requires `gws auth` setup)
+  - `"fetch"` -- `fetch_emails.py` only (requires `credentials.json` from Google Cloud Console, Gmail only)
+  - `"gws"` -- `gws` CLI only (requires `gws auth` setup, Gmail only)
 - **obsidian_vault_path**: Full path to your Obsidian vault (optional -- leave blank to output to `output/` folder)
 - **priority_senders**: Comma-separated names or domains to flag as HIGH priority in email triage
 - **extra_skip_senders**: Additional senders to always skip (the prompt already skips common automated senders)
@@ -83,34 +84,40 @@ Edit `briefing-data/.env` and fill in:
 - **FRED_API_KEY**: Free API key from https://fred.stlouisfed.org/docs/api/api_key.html (takes 30 seconds to register)
 - **TWELVE_DATA_API_KEY** (optional): Free API key from https://twelvedata.com/pricing (800 calls/day). Provides reliable market data for S&P 500, XBI, Russell 2000. Without it, falls back to yfinance (often rate-limited).
 - **NCBI_API_KEY** (optional): Free from https://www.ncbi.nlm.nih.gov/account/. Increases PubMed rate limit from 3/sec to 10/sec. Works without it.
-- **WORK_GMAIL_ADDRESS**: Same as work_gmail in config.yaml (used by the Python script, optional)
+- **M365_CLI_PATH** (optional): Path to your m365 CLI directory (default: `~/GitHub/m365-cli/`). Only needed if using `"m365"` email method.
 
-### 4. Gmail setup (choose one method per account)
+### 4. Email setup (choose one method per account)
 
-There are three ways to fetch email. Pick one per account and set `<label>_gmail_method` in `config.yaml`:
+Both accounts support Gmail and Microsoft 365. Pick one method per account and set `<label>_email_method` in `config.yaml`:
 
-**Option A: Gmail MCP server (method: "mcp") -- recommended for Claude Desktop**
+**Option A: Microsoft 365 (method: "m365") -- for Outlook/Office 365 accounts**
+1. Install and set up an m365 CLI that exposes `mail list` and `mail read` commands via subprocess
+2. Authenticate using the CLI's device code or browser flow
+3. Test: `cd briefing-data && python fetch_m365_emails.py work your_work@domain.com`
+4. Set `work_email_method: "m365"` in config.yaml
+
+**Option B: Gmail MCP server (method: "mcp") -- recommended for Claude Desktop + Gmail**
 1. Open Claude Desktop Settings > MCP Servers
 2. Add the Gmail MCP server and authenticate with your Gmail account
 3. The briefing uses read-only access -- it never sends emails or creates drafts
-4. Set `personal_gmail_method: "mcp"` in config.yaml
+4. Set `personal_email_method: "mcp"` in config.yaml
 
-**Option B: gws CLI (method: "gws") -- recommended for Claude Code**
+**Option C: gws CLI (method: "gws") -- recommended for Claude Code + Gmail**
 1. Install `gws` CLI: see https://github.com/googleworkspace/cli
 2. Run `gws auth` to authenticate
 3. Verify with `gws gmail +triage` -- should show your unread inbox
-4. Set `personal_gmail_method: "gws"` in config.yaml
+4. Set `personal_email_method: "gws"` in config.yaml
 
-**Option C: Google Cloud OAuth (method: "fetch") -- for advanced users**
+**Option D: Google Cloud OAuth (method: "fetch") -- for advanced Gmail users**
 1. Create a Google Cloud project at https://console.cloud.google.com/
 2. Enable the Gmail API
 3. Create OAuth 2.0 credentials (Desktop app type)
 4. Download the credentials JSON file and save it as `briefing-data/credentials.json`
 5. Run `cd briefing-data && python fetch_emails.py work your_work@gmail.com` -- opens browser for OAuth consent on first run
 6. After authenticating, `token_work.json` is saved and auto-refreshes on future runs
-7. Set `work_gmail_method: "fetch"` in config.yaml
+7. Set `work_email_method: "fetch"` in config.yaml
 
-**Note:** `credentials.json` is tied to a specific Google Cloud project. Only accounts added as test users in that project can authenticate. If OAuth hangs or fails, use "gws" method for that account instead. The script has a 10-second timeout on token refresh and a 15-second timeout on OAuth, and will exit gracefully if authentication cannot complete.
+**Note:** For Gmail methods, `credentials.json` is tied to a specific Google Cloud project. Only accounts added as test users in that project can authenticate. If OAuth hangs or fails, use "gws" method for that account instead. The script has a 10-second timeout on token refresh and a 15-second timeout on OAuth, and will exit gracefully if authentication cannot complete.
 
 ### 6. Optional MCP servers
 

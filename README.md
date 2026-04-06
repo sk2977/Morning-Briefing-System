@@ -1,11 +1,11 @@
 # Morning Briefing System
 
-Claude Desktop Cowork scheduled task that delivers a daily WSJ-style briefing at 6:00 AM ET. One prompt file, three Python helper scripts, one state folder. No framework, no server, no CI/CD.
+Claude Desktop Cowork scheduled task that delivers a daily WSJ-style briefing at 6:00 AM ET. One prompt file, four Python helper scripts, one state folder. No framework, no server, no CI/CD.
 
 ## What It Produces
 
 A ~10 minute read covering:
-- Actionable emails from one or two Gmail accounts (personal, optionally work)
+- Actionable emails from one or two accounts (Gmail or Microsoft 365, personal and/or work)
 - 9-point summary (market sentiment, top deal, VC pulse, regulatory catalysts, AI news)
 - Biopharma deep dive: M&A/deal flow with context blocks, clinical trials, therapeutic area signals, VC rounds
 - Macro environment: FRED rates, market indices, key dates (FOMC, PDUFA)
@@ -26,10 +26,11 @@ briefing-data/
   .env.example                   -- Template for .env
   fetch_macro.py                 -- FRED + Twelve Data / yfinance helper (run by Cowork each morning)
   fetch_emails.py                -- Gmail API helper (usage: python fetch_emails.py <label> <email>)
+  fetch_m365_emails.py           -- Microsoft 365 helper (usage: python fetch_m365_emails.py <label> <email>)
   fetch_pubmed.py                -- NCBI E-utilities helper (publication volume trends)
   macro_latest.json              -- Written by fetch_macro.py each run (gitignored)
   pubmed_latest.json             -- Written by fetch_pubmed.py each run (gitignored)
-  *_emails.json                  -- Written by fetch_emails.py each run (gitignored)
+  *_emails.json                  -- Written by fetch_emails.py or fetch_m365_emails.py each run (gitignored)
   credentials.json               -- Google OAuth credentials (gitignored)
   token_*.json                   -- Per-account OAuth tokens (gitignored)
   curriculum_state.json          -- Education progress tracker (gitignored)
@@ -54,25 +55,29 @@ pip install -r requirements.txt
 
 ```bash
 cp briefing-data/.env.example briefing-data/.env
-# Edit .env: add your FRED API key and work Gmail address
+# Edit .env: add your FRED API key (and optionally Twelve Data, NCBI keys)
 
 cp briefing-data/config.example.yaml briefing-data/config.yaml
-# Edit config.yaml: add your Gmail addresses, Obsidian vault path, priority senders
+# Edit config.yaml: add your email addresses, methods, Obsidian vault path, priority senders
 
 cp briefing-data/curriculum_state.example.json briefing-data/curriculum_state.json
 cp briefing-data/deals_log.example.csv briefing-data/deals_log.csv
 ```
 
-### 3. Set up Google OAuth for work Gmail
+### 3. Set up email access (choose per account)
 
-The work Gmail account is accessed via the Gmail API (not MCP). You need OAuth credentials:
+**For Microsoft 365 / Outlook accounts** (method: `"m365"`):
+1. Set up an m365 CLI that exposes `mail list` and `mail read` commands
+2. Authenticate and test: `python briefing-data/fetch_m365_emails.py work your_work@domain.com`
+3. Set `work_email_method: "m365"` in config.yaml
 
+**For Gmail accounts** (method: `"fetch"`, `"gws"`, `"mcp"`, or `"auto"`):
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a project and enable the Gmail API
 3. Create OAuth 2.0 credentials (Desktop app type)
 4. Download `credentials.json` to `briefing-data/`
-5. Run `python briefing-data/fetch_emails.py work your_work@gmail.com` once to complete OAuth flow in browser
-6. (Optional) Run `python briefing-data/fetch_emails.py personal your_personal@gmail.com` for personal account too
+5. Run `python briefing-data/fetch_emails.py personal your_personal@gmail.com` once to complete OAuth flow in browser
+6. Or use `gws` CLI (`gws auth`) or Gmail MCP in Claude Desktop -- see SETUP.md for details
 
 ### 4. Create Claude Desktop scheduled task
 
@@ -84,7 +89,7 @@ The work Gmail account is accessed via the Gmail API (not MCP). You need OAuth c
 
 ### 5. Connect MCP servers in Claude Desktop (optional)
 
-Connect your personal Gmail as an MCP server in Claude Desktop (recommended for best email integration). The following MCP servers are optional enhancements -- the briefing works without them:
+Connect your Gmail as an MCP server in Claude Desktop (recommended for Gmail email integration). The following MCP servers are optional enhancements -- the briefing works without them:
 - **Tavily** -- Better deal search quality. Without it, set `tavily_available: false` in config.yaml.
 - **PubMed** -- Publication volume trends in education module
 - **ChEMBL** -- Drug mechanism enrichment in education module
@@ -103,7 +108,8 @@ Note: Computer must be awake and Claude Desktop open at run time. If asleep, it 
 | FRED API | fetch_macro.py | Fed Funds, 10Y, unemployment, CPI, oil | Free |
 | Twelve Data | fetch_macro.py | S&P 500, XBI, Russell 2000 (yfinance fallback) | Free (800 calls/day) |
 | NCBI E-utilities | fetch_pubmed.py | Publication volume trends (5 therapeutic areas) | Free |
-| Gmail | MCP -> fetch_emails.py -> gws CLI (fallback chain) | Email triage | Free |
+| Gmail | MCP -> fetch_emails.py -> gws CLI (fallback chain) | Email triage (Gmail) | Free |
+| Microsoft 365 | fetch_m365_emails.py (m365 CLI) | Email triage (Outlook) | Free |
 | WebSearch | scheduled prompt | PDUFA, AI news, macro fallback | Free |
 | Tavily MCP | scheduled prompt | Deal searches (3, advanced), VC research (1) | ~4 calls/run, 7 credits |
 | ChEMBL MCP | scheduled prompt | Drug mechanism enrichment (optional) | Free |
